@@ -1,0 +1,38 @@
+{
+  "parserOptions": {
+    "sourceType": "module"
+  },
+  "env": { "es6": true },
+	"root": true,
+	"plugins": [
+		"simple-import-sort",
+    "import",
+    "@getify/proper-arrows"
+	],
+  "extends": ["next", "prettier" ],
+  "rules": {
+    "@getify/proper-arrows/params": [ "warn", { "unused": "trailing", "count": 2, "length": 2, "allowed": [ "e", "v", "cb", "fn", "pr", "id" ] } ],
+		"@getify/proper-arrows/name": "warn",
+		"simple-import-sort/imports": [
+			"error",
+			{
+				"groups": [
+					[
+						"^\\u0000"
+					],
+					[
+						"^react",
+						"^@?\\w"
+					],
+					[
+						"^(components|config|contexts|shared|tracking|utils)",
+						"^\\../"
+					],
+					[
+						"^\\./"
+					]
+				]
+			}
+		]
+  }
+}
