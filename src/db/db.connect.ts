@@ -1,5 +1,7 @@
 import { Db, MongoClient, MongoClientOptions } from "mongodb";
 
+import { logger } from "utils";
+
 const { DB_NAME, DB_URI } = process.env;
 
 if (![DB_NAME, DB_URI].every(Boolean)) {
@@ -18,7 +20,7 @@ export async function connectToDatabase(): Promise<{
   console.time(connectToDatabase.name);
 
   if (Object.values(cache).every(Boolean)) {
-    console.log("[DATABASE CACHED]");
+    logger.info("[DATABASE CACHED]");
     console.timeEnd(connectToDatabase.name);
 
     return {

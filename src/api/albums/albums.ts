@@ -3,9 +3,7 @@ import { Db } from "mongodb";
 
 import { chainAndThrowError, chainError, logger } from "utils";
 
-import { Raw, RawMasterData, RawRelease } from "./albums.Raw";
-
-import { AlbumType } from ".";
+import { AlbumType, Raw, RawMasterData, RawRelease } from ".";
 
 const COLLECTION_ALBUMS = "albums";
 
