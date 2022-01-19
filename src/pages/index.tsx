@@ -49,12 +49,14 @@ const Home = ({
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <Container>
-        <Header>
+      <Header>
+        <Container>
           <Title>Vinyl Collection</Title>
           <Filter onFilter={handleFilterAlbums} />
-        </Header>
+        </Container>
+      </Header>
 
+      <Container>
         <Content>
           <AlbumList>
             {filteredAlbums.map(function renderAlbum(album) {
@@ -62,9 +64,9 @@ const Home = ({
             })}
           </AlbumList>
           {status === "rejected" && (
-            <p>
-              <i>Something went wrong when fetching albums</i>
-            </p>
+            <ErrorMessage>
+              Something went wrong when fetching albums
+            </ErrorMessage>
           )}
         </Content>
       </Container>
@@ -118,17 +120,18 @@ const Header = styled.div`
   flex-direction: column;
   background-color: var(--color-background);
   z-index: var(--zIndex-overlay);
-
-  ${breakpoint(0)} {
-    flex-direction: row;
-    align-items: center;
-    padding: ${space(3)} 0;
-  }
+  margin-bottom: ${space(2)};
 
   ${breakpoint(1)} {
     flex-direction: row;
     align-items: center;
-    padding: ${space(4)} 0;
+    padding: ${space(3)} 0 ${space(0)} 0;
+  }
+
+  ${breakpoint(2)} {
+    flex-direction: row;
+    align-items: center;
+    padding: ${space(4)} 0 ${space(3)} 0;
   }
 `;
 
@@ -157,6 +160,11 @@ const AlbumList = styled.div`
     grid-template-columns: repeat(auto-fit, minmax(232px, 1fr));
     grid-row-gap: ${space(5)};
   }
+`;
+
+const ErrorMessage = styled.p`
+  color: var(--color-error);
+  font-style: italic;
 `;
 
 export default Home;

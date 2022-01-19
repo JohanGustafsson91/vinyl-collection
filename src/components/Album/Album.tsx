@@ -183,6 +183,7 @@ const Cover = styled.img`
   height: 100px;
   margin-bottom: ${space(3)};
   transition: all 0.3s ease-in-out 0s;
+  border: 2px solid var(--color-border);
 
   ${breakpoint(1)} {
     width: 232px;

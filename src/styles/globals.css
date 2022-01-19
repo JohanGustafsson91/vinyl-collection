@@ -1,8 +1,14 @@
 :root {
-  --color-background: #030328;
+  --color-background: #20202C;
   --color-text: #ffffff;
-  --color-detail-text: #000000;
-  --color-text-secondary: #888888;
+  --color-detail-text: #151419;
+  --color-text-secondary: #605F76;
+  --color-border: #fff;
+  --color-success: #A7E521;
+  --color-info: #03C3EC;
+  --color-alert: #FFD422;
+  --color-error: #EF3F26;
+
   --zIndex-overlay: 1;
   --zIndex-popup: 10;
 }
