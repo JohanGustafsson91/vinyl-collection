@@ -117,8 +117,11 @@ export interface RawRelease {
   rating: number;
   basic_information: RawBasicInformation;
   folder_id: number;
-  masterData: RawMasterData;
 }
+
+export type RawReleaseWithMasterData = RawRelease & {
+  masterData: RawMasterData;
+};
 
 export interface Raw {
   releases: RawRelease[];

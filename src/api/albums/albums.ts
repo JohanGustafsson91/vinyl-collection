@@ -1,54 +1,42 @@
 import { connectToDatabase } from "db/db.connect";
 import { Db } from "mongodb";
 
-import { chainAndThrowError, chainError, logger } from "utils";
+import { catchChainedError, logger,throwChainedError } from "utils";
 
-import { AlbumType, Raw, RawMasterData, RawRelease } from ".";
+import {
+  AlbumType,
+  Raw,
+  RawMasterData,
+  RawRelease,
+  RawReleaseWithMasterData,
+} from ".";
 
 const COLLECTION_ALBUMS = "albums";
 
 export async function getAlbums() {
   const { db } = await connectToDatabase().catch(
-    chainAndThrowError("Could not connect to database")
+    throwChainedError("Could not connect to database")
   );
 
   const [storedAlbums, fetchedAlbums] = await Promise.all([
     getStoredAlbumsFromDb(db),
     fetchAlbums(),
-  ]).catch(chainAndThrowError("Could not get albums from database or api"));
+  ]).catch(throwChainedError("Could not get albums from database or api"));
 
   const albumsToSaveInDatabaseWithoutMasterData = fetchedAlbums.filter(
-    function removeAlbumsAlreadyStored(album) {
-      return !storedAlbums.find(propEq("id")(album.id));
-    }
+    (album) => !storedAlbums.find(propEq("id")(album.id))
   );
 
   let albumsToInsertInDatabase = await Promise.all(
-    albumsToSaveInDatabaseWithoutMasterData.map(
-      async function fetchMasterDataForAlbum(album) {
-        const masterData = await fetchMasterData(album).catch(
-          chainError("Catched error for master data")
-        );
-
-        if (masterData instanceof Error) {
-          logger.info(masterData.message);
-          return undefined;
-        }
-
-        return masterData;
-      }
-    )
+    albumsToSaveInDatabaseWithoutMasterData.map(fetchMasterDataForAlbum)
   );
 
   albumsToInsertInDatabase = albumsToInsertInDatabase.filter(Boolean);
 
-  const albumIdsToRemoveFromDatabase = storedAlbums.reduce(
-    function reduceIdsToRemove(prev, album) {
-      const found = fetchedAlbums.find(propEq("id")(album.id));
-      return [...prev, ...(found ? [] : [album.id])];
-    },
-    []
-  );
+  const albumIdsToRemoveFromDatabase = storedAlbums.reduce((prev, album) => {
+    const found = fetchedAlbums.find(propEq("id")(album.id));
+    return [...prev, ...(found ? [] : [album.id])];
+  }, []);
 
   logger.info("albumsToInsertInDatabase", albumsToInsertInDatabase);
   logger.info("albumIdsToRemoveFromDatabase", albumIdsToRemoveFromDatabase);
@@ -62,10 +50,10 @@ export async function getAlbums() {
       db.collection(COLLECTION_ALBUMS).deleteMany({
         id: { $in: albumIdsToRemoveFromDatabase },
       }),
-  ]).catch(chainAndThrowError("Could not update database"));
+  ]).catch(throwChainedError("Could not update database"));
 
   const payload = [
-    ...storedAlbums.filter(function filterAlbumIfRemoved({ id }) {
+    ...storedAlbums.filter(function notRemovedAlbum({ id }) {
       return !albumIdsToRemoveFromDatabase.find(equals(id));
     }),
     ...albumsToInsertInDatabase,
@@ -80,29 +68,36 @@ async function getStoredAlbumsFromDb(db: Db) {
     .collection(COLLECTION_ALBUMS)
     .find({})
     .toArray()
-    .catch(chainAndThrowError("Could not get collections from database"));
+    .catch(throwChainedError("Could not get collections from database"));
   console.timeEnd(getStoredAlbumsFromDb.name);
 
-  return storedAlbums as unknown as RawRelease[];
+  return storedAlbums as unknown as RawReleaseWithMasterData[];
 }
 
 async function fetchAlbums() {
   const response = await request<Raw>(process.env.DISCOGS_ENDPOINT_RELEASES, {
     headers: getHeaders(),
-  }).catch(chainAndThrowError("Could not fetch releases from discogs"));
+  }).catch(throwChainedError("Could not fetch releases from discogs"));
 
   return response.releases;
 }
 
-async function fetchMasterData(album: RawRelease) {
+async function fetchMasterDataForAlbum(
+  album: Omit<RawRelease, "masterData">
+): Promise<RawReleaseWithMasterData | undefined> {
   const response = await request<RawMasterData>(
     album.basic_information.master_url,
     {
       headers: getHeaders(),
     }
   ).catch(
-    chainAndThrowError(`Could not fetch master data for album ${album.id}`)
+    catchChainedError(`Could not fetch master data for album ${album.id}`)
   );
+
+  if (response instanceof Error) {
+    logger.info(response.message);
+    return undefined;
+  }
 
   return {
     ...album,
@@ -110,7 +105,7 @@ async function fetchMasterData(album: RawRelease) {
   };
 }
 
-function getFormattedAlbums(raw: Raw["releases"]): AlbumType[] {
+function getFormattedAlbums(raw: RawReleaseWithMasterData[]): AlbumType[] {
   return raw
     .map(function formatAlbum(release) {
       const { basic_information, masterData } = release;
@@ -170,7 +165,7 @@ function getFormattedAlbums(raw: Raw["releases"]): AlbumType[] {
 async function request<T>(url: string, init: RequestInit): Promise<T> {
   console.time(url);
   const response = await fetch(url, init).catch(
-    chainAndThrowError(`Request to ${url} failed`)
+    throwChainedError(`Request to ${url} failed`)
   );
   console.timeEnd(url);
 
@@ -186,7 +181,7 @@ async function request<T>(url: string, init: RequestInit): Promise<T> {
 
   const json = await response
     .json()
-    .catch(chainAndThrowError("Could not parse json"));
+    .catch(throwChainedError("Could not parse json"));
 
   return json;
 }

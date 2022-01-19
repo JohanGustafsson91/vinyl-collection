@@ -7,7 +7,7 @@ import { breakpoint, space } from "theme";
 
 import { Album } from "components/Album";
 import { Filter, FilterOptions } from "components/Filter";
-import { chainError, logger } from "utils";
+import { catchChainedError, logger } from "utils";
 
 const Home = ({
   albums,
@@ -77,7 +77,9 @@ export const getServerSideProps: GetServerSideProps<{
   status: "resolved" | "rejected";
 }> = async () => {
   console.time(getAlbums.name);
-  const albums = await getAlbums().catch(chainError("Could not get albums"));
+  const albums = await getAlbums().catch(
+    catchChainedError("Could not get albums")
+  );
   console.timeEnd(getAlbums.name);
 
   if (albums instanceof Error) {
