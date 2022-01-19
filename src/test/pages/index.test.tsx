@@ -1,5 +1,6 @@
 /* eslint-disable @getify/proper-arrows/name */
 import { render, screen } from "@testing-library/react";
+import { RawRelease } from "api/albums";
 import mockDataReleases from "api/mocks/albums/releasesMockData.json";
 import { rest, server } from "api/mocks/server";
 import * as db from "db/db.connect";
@@ -16,22 +17,17 @@ console.time = jest.fn();
 test("should not insert new releases in db if up to date", async () => {
   const insertMany = jest.fn(() => Promise.resolve(true));
   const deleteMany = jest.fn(() => Promise.resolve(true));
-
-  mockedDb.connectToDatabase.mockImplementation(() =>
-    Promise.resolve({
-      client: {} as unknown as MongoClient,
-      db: {
-        collection: jest.fn(() => ({
-          find: jest.fn(() => ({
-            toArray: jest.fn(() =>
-              Promise.resolve([mockDataReleases.releases[0]])
-            ),
-          })),
-          insertMany,
-          deleteMany,
-        })),
-      } as unknown as Db,
-    })
+  const findCollections = jest.fn(() =>
+    Promise.resolve([mockDataReleases.releases[0]])
+  );
+  mockedDb.connectToDatabase.mockResolvedValue(
+    Promise.resolve(
+      mockDatabase({
+        findCollections,
+        insertMany,
+        deleteMany,
+      })
+    )
   );
 
   server.use(
@@ -61,20 +57,15 @@ test("should not insert new releases in db if up to date", async () => {
 test("should insert new releases in db", async () => {
   const insertMany = jest.fn(() => Promise.resolve(true));
   const deleteMany = jest.fn(() => Promise.resolve(true));
-
-  mockedDb.connectToDatabase.mockImplementation(() =>
-    Promise.resolve({
-      client: {} as unknown as MongoClient,
-      db: {
-        collection: jest.fn(() => ({
-          find: jest.fn(() => ({
-            toArray: jest.fn(() => Promise.resolve([])),
-          })),
-          insertMany,
-          deleteMany,
-        })),
-      } as unknown as Db,
-    })
+  const findCollections = jest.fn(() => Promise.resolve([]));
+  mockedDb.connectToDatabase.mockResolvedValue(
+    Promise.resolve(
+      mockDatabase({
+        findCollections,
+        insertMany,
+        deleteMany,
+      })
+    )
   );
 
   server.use(
@@ -104,22 +95,17 @@ test("should insert new releases in db", async () => {
 test("should remove releases from db", async () => {
   const insertMany = jest.fn(() => Promise.resolve(true));
   const deleteMany = jest.fn(() => Promise.resolve(true));
-
-  mockedDb.connectToDatabase.mockImplementation(() =>
-    Promise.resolve({
-      client: {} as unknown as MongoClient,
-      db: {
-        collection: jest.fn(() => ({
-          find: jest.fn(() => ({
-            toArray: jest.fn(() =>
-              Promise.resolve([mockDataReleases.releases[0]])
-            ),
-          })),
-          insertMany,
-          deleteMany,
-        })),
-      } as unknown as Db,
-    })
+  const findCollections = jest.fn(() =>
+    Promise.resolve([mockDataReleases.releases[0]])
+  );
+  mockedDb.connectToDatabase.mockResolvedValue(
+    Promise.resolve(
+      mockDatabase({
+        findCollections,
+        insertMany,
+        deleteMany,
+      })
+    )
   );
 
   server.use(
@@ -148,15 +134,9 @@ test("should remove releases from db", async () => {
 
 describe("Error handling", () => {
   test("should show error message if db connection failed", async () => {
-    const insertMany = jest.fn(() => Promise.resolve(true));
-    const deleteMany = jest.fn(() => Promise.resolve(true));
-
     mockedDb.connectToDatabase.mockRejectedValue("Database connection error");
 
     const props = await runGetServerSideProps();
-
-    expect(insertMany).toHaveBeenCalledTimes(0);
-    expect(deleteMany).toHaveBeenCalledTimes(0);
 
     render(<Home {...props} />);
 
@@ -169,20 +149,15 @@ describe("Error handling", () => {
   test("should show error message if db fails to update", async () => {
     const insertMany = jest.fn(() => Promise.resolve(true));
     const deleteMany = jest.fn(() => Promise.resolve(true));
-
-    mockedDb.connectToDatabase.mockImplementation(() =>
-      Promise.resolve({
-        client: {} as unknown as MongoClient,
-        db: {
-          collection: jest.fn(() => ({
-            find: jest.fn(() => ({
-              toArray: jest.fn(() => Promise.reject("No connection")),
-            })),
-            insertMany,
-            deleteMany,
-          })),
-        } as unknown as Db,
-      })
+    const findCollections = jest.fn(() => Promise.reject("No connection"));
+    mockedDb.connectToDatabase.mockResolvedValue(
+      Promise.resolve(
+        mockDatabase({
+          findCollections,
+          insertMany,
+          deleteMany,
+        })
+      )
     );
 
     const props = await runGetServerSideProps();
@@ -201,22 +176,17 @@ describe("Error handling", () => {
   test("should show error when error in external collection request", async () => {
     const insertMany = jest.fn(() => Promise.resolve(true));
     const deleteMany = jest.fn(() => Promise.resolve(true));
-
-    mockedDb.connectToDatabase.mockImplementation(() =>
-      Promise.resolve({
-        client: {} as unknown as MongoClient,
-        db: {
-          collection: jest.fn(() => ({
-            find: jest.fn(() => ({
-              toArray: jest.fn(() =>
-                Promise.resolve([mockDataReleases.releases[0]])
-              ),
-            })),
-            insertMany,
-            deleteMany,
-          })),
-        } as unknown as Db,
-      })
+    const findCollections = jest.fn(() =>
+      Promise.resolve([mockDataReleases.releases[0]])
+    );
+    mockedDb.connectToDatabase.mockResolvedValue(
+      Promise.resolve(
+        mockDatabase({
+          findCollections,
+          insertMany,
+          deleteMany,
+        })
+      )
     );
 
     server.use(
@@ -249,19 +219,12 @@ describe("Error handling", () => {
   test("should not update db when masterdata request fail", async () => {
     const insertMany = jest.fn(() => Promise.resolve(true));
     const deleteMany = jest.fn(() => Promise.resolve(true));
-
-    mockedDb.connectToDatabase.mockImplementation(() =>
-      Promise.resolve({
-        client: {} as unknown as MongoClient,
-        db: {
-          collection: jest.fn(() => ({
-            find: jest.fn(() => ({
-              toArray: jest.fn(() => Promise.resolve([])),
-            })),
-            insertMany,
-            deleteMany,
-          })),
-        } as unknown as Db,
+    const findCollections = jest.fn(() => Promise.resolve([]));
+    mockedDb.connectToDatabase.mockResolvedValue(
+      mockDatabase({
+        findCollections,
+        insertMany,
+        deleteMany,
       })
     );
 
@@ -305,6 +268,27 @@ describe("Error handling", () => {
 
     expect(screen.getAllByRole("article")).toHaveLength(1);
   });
+});
+
+const mockDatabase = ({
+  findCollections,
+  insertMany,
+  deleteMany,
+}: {
+  findCollections: jest.Mock<Promise<RawRelease[]>>;
+  insertMany: jest.Mock<Promise<boolean>>;
+  deleteMany: jest.Mock<Promise<boolean>>;
+}) => ({
+  client: {} as unknown as MongoClient,
+  db: {
+    collection: jest.fn(() => ({
+      find: jest.fn(() => ({
+        toArray: findCollections,
+      })),
+      insertMany,
+      deleteMany,
+    })),
+  } as unknown as Db,
 });
 
 async function runGetServerSideProps() {
