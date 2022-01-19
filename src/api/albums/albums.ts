@@ -1,7 +1,7 @@
 import { connectToDatabase } from "db/db.connect";
 import { Db } from "mongodb";
 
-import { catchChainedError, logger,throwChainedError } from "utils";
+import { catchChainedError, logger, throwChainedError } from "utils";
 
 import {
   AlbumType,
@@ -27,11 +27,11 @@ export async function getAlbums() {
     (album) => !storedAlbums.find(propEq("id")(album.id))
   );
 
-  let albumsToInsertInDatabase = await Promise.all(
-    albumsToSaveInDatabaseWithoutMasterData.map(fetchMasterDataForAlbum)
-  );
-
-  albumsToInsertInDatabase = albumsToInsertInDatabase.filter(Boolean);
+  const albumsToInsertInDatabase = (
+    await Promise.all(
+      albumsToSaveInDatabaseWithoutMasterData.map(fetchMasterDataForAlbum)
+    )
+  ).filter(Boolean);
 
   const albumIdsToRemoveFromDatabase = storedAlbums.reduce((prev, album) => {
     const found = fetchedAlbums.find(propEq("id")(album.id));
