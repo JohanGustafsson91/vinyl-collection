@@ -4,7 +4,7 @@ import { Db } from "mongodb";
 import { catchChainedError, logger, throwChainedError } from "utils";
 
 import {
-  AlbumType,
+  FormattedAlbum,
   Raw,
   RawMasterData,
   RawRelease,
@@ -63,13 +63,13 @@ export async function getAlbums() {
 }
 
 async function getStoredAlbumsFromDb(db: Db) {
-  const timeEnd = logger.timeStart(getStoredAlbumsFromDb.name);
+  const logTimeEnd = logger.timeStart(getStoredAlbumsFromDb.name);
   const storedAlbums = await db
     .collection(COLLECTION_ALBUMS)
     .find({})
     .toArray()
     .catch(throwChainedError("Could not get collections from database"));
-  timeEnd();
+  logTimeEnd();
 
   return storedAlbums as unknown as RawReleaseWithMasterData[];
 }
@@ -105,7 +105,7 @@ async function fetchMasterDataForAlbum(
   };
 }
 
-function getFormattedAlbums(raw: RawReleaseWithMasterData[]): AlbumType[] {
+function getFormattedAlbums(raw: RawReleaseWithMasterData[]): FormattedAlbum[] {
   return raw
     .map(function formatAlbum(release) {
       const { basic_information, masterData } = release;
@@ -163,11 +163,11 @@ function getFormattedAlbums(raw: RawReleaseWithMasterData[]): AlbumType[] {
 }
 
 async function request<T>(url: string, init: RequestInit): Promise<T> {
-  const timeEnd = logger.timeStart(url);
+  const logTimeEnd = logger.timeStart(url);
   const response = await fetch(url, init).catch(
     throwChainedError(`Request to ${url} failed`)
   );
-  timeEnd();
+  logTimeEnd();
 
   if (!response.ok) {
     return Promise.reject(

@@ -11,8 +11,8 @@
 	],
   "extends": ["next", "prettier" ],
   "rules": {
-    "@getify/proper-arrows/params": [ "warn", { "unused": "trailing", "count": 2, "length": 2, "allowed": [ "e", "v", "cb", "fn", "pr", "id" ] } ],
-		"@getify/proper-arrows/name": "warn",
+    "@getify/proper-arrows/params": [ "off", { "unused": "trailing", "count": 2, "length": 2, "allowed": [ "e", "v", "cb", "fn", "pr", "id" ] } ],
+		"@getify/proper-arrows/name": "off",
 		"simple-import-sort/imports": [
 			"error",
 			{

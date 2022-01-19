@@ -4,15 +4,10 @@ import { space } from "theme";
 
 export const Filter = ({ onFilter }: Props) => {
   const [filter, setFilter] = useReducer(
-    function updateState(
-      prevState: FilterOptions,
-      newPartialState: Partial<FilterOptions>
-    ) {
-      return {
-        ...prevState,
-        ...newPartialState,
-      };
-    },
+    (prevState: FilterOptions, newPartialState: Partial<FilterOptions>) => ({
+      ...prevState,
+      ...newPartialState,
+    }),
     {
       query: "",
       includeTrack: true,
@@ -20,11 +15,11 @@ export const Filter = ({ onFilter }: Props) => {
   );
 
   const debouncedQuery = useDebounced(filter.query, 500);
-  const refCallbackFnOnFilter = useRef(onFilter);
+  const refCallbackFunctionOnFilter = useRef(onFilter);
 
   useEffect(
     function callBackWhenChangedFilter() {
-      refCallbackFnOnFilter.current({
+      refCallbackFunctionOnFilter.current({
         query: debouncedQuery,
         includeTrack: filter.includeTrack,
       });

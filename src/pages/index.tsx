@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { AlbumType, getAlbums } from "api/albums";
+import { FormattedAlbum, getAlbums } from "api/albums";
 import { GetServerSideProps, InferGetServerSidePropsType } from "next";
 import Head from "next/head";
 import styled from "styled-components";
@@ -75,14 +75,14 @@ const Home = ({
 };
 
 export const getServerSideProps: GetServerSideProps<{
-  albums: AlbumType[];
+  albums: FormattedAlbum[];
   status: "resolved" | "rejected";
 }> = async () => {
-  const timeEnd = logger.timeStart(getAlbums.name);
+  const logTimeEnd = logger.timeStart(getAlbums.name);
   const albums = await getAlbums().catch(
     catchChainedError("Could not get albums")
   );
-  timeEnd();
+  logTimeEnd();
 
   if (albums instanceof Error) {
     logger.error(albums.stack);

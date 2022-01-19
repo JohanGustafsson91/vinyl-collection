@@ -1,4 +1,4 @@
-export interface AlbumType {
+export interface FormattedAlbum {
   id: number;
   artist: string;
   title: string;
@@ -11,17 +11,17 @@ export interface AlbumType {
   label: string;
   labelCategoryNumber: string;
   genres: string[];
-  tracks: Track[];
-  videos: Video[];
+  tracks: FormattedTrack[];
+  videos: FormattedVideo[];
 }
 
-export type Track = {
+type FormattedTrack = {
   title: string;
   position: string;
   duration: string;
 };
 
-type Video = {
+type FormattedVideo = {
   url: string;
   title: string;
 };

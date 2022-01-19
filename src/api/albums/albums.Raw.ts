@@ -1,11 +1,11 @@
-export interface RawFormat {
+interface RawFormat {
   name: string;
   qty: string;
   text?: string;
   descriptions: string[];
 }
 
-export interface RawLabel {
+interface RawLabel {
   name: string;
   catno: string;
   entity_type: string;
@@ -14,7 +14,7 @@ export interface RawLabel {
   resource_url: string;
 }
 
-export interface RawArtist {
+interface RawArtist {
   name: string;
   anv: string;
   join: string;
@@ -24,7 +24,7 @@ export interface RawArtist {
   resource_url: string;
 }
 
-export interface RawBasicInformation {
+interface RawBasicInformation {
   id: number;
   master_id: number;
   master_url: string;
@@ -40,7 +40,7 @@ export interface RawBasicInformation {
   styles?: string[];
 }
 
-export interface RawImage {
+interface RawImage {
   type: string;
   uri: string;
   resource_url: string;
@@ -49,7 +49,7 @@ export interface RawImage {
   height: number;
 }
 
-export interface RawExtraartist {
+interface RawExtraartist {
   name: string;
   anv: string;
   join: string;
@@ -60,7 +60,7 @@ export interface RawExtraartist {
   thumbnail_url: string;
 }
 
-export interface RawTracklist {
+interface RawTracklist {
   position: string;
   type_: string;
   title: string;
@@ -68,7 +68,7 @@ export interface RawTracklist {
   extraartists?: RawExtraartist[];
 }
 
-export interface RawArtist2 {
+interface RawArtist2 {
   name: string;
   anv: string;
   join: string;
@@ -79,7 +79,7 @@ export interface RawArtist2 {
   thumbnail_url: string;
 }
 
-export interface RawVideo {
+interface RawVideo {
   uri: string;
   title: string;
   description: string;

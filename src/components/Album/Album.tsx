@@ -6,7 +6,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { AlbumType } from "api/albums";
+import { FormattedAlbum } from "api/albums";
 import styled from "styled-components";
 import { breakpoint, fontSize, space } from "theme";
 
@@ -142,7 +142,7 @@ export const Album = ({ album }: Props) => {
 };
 
 interface Props {
-  album: AlbumType;
+  album: FormattedAlbum;
 }
 
 function useOnClickOutside(
