@@ -63,13 +63,13 @@ export async function getAlbums() {
 }
 
 async function getStoredAlbumsFromDb(db: Db) {
-  console.time(getStoredAlbumsFromDb.name);
+  const timeEnd = logger.timeStart(getStoredAlbumsFromDb.name);
   const storedAlbums = await db
     .collection(COLLECTION_ALBUMS)
     .find({})
     .toArray()
     .catch(throwChainedError("Could not get collections from database"));
-  console.timeEnd(getStoredAlbumsFromDb.name);
+  timeEnd();
 
   return storedAlbums as unknown as RawReleaseWithMasterData[];
 }
@@ -163,11 +163,11 @@ function getFormattedAlbums(raw: RawReleaseWithMasterData[]): AlbumType[] {
 }
 
 async function request<T>(url: string, init: RequestInit): Promise<T> {
-  console.time(url);
+  const timeEnd = logger.timeStart(url);
   const response = await fetch(url, init).catch(
     throwChainedError(`Request to ${url} failed`)
   );
-  console.timeEnd(url);
+  timeEnd();
 
   if (!response.ok) {
     return Promise.reject(

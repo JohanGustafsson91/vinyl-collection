@@ -76,11 +76,11 @@ export const getServerSideProps: GetServerSideProps<{
   albums: AlbumType[];
   status: "resolved" | "rejected";
 }> = async () => {
-  console.time(getAlbums.name);
+  const timeEnd = logger.timeStart(getAlbums.name);
   const albums = await getAlbums().catch(
     catchChainedError("Could not get albums")
   );
-  console.timeEnd(getAlbums.name);
+  timeEnd();
 
   if (albums instanceof Error) {
     logger.error(albums.stack);

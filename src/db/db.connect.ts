@@ -17,11 +17,10 @@ export async function connectToDatabase(): Promise<{
   db: Db;
   client: MongoClient;
 }> {
-  console.time(connectToDatabase.name);
-
+  const timeEnd = logger.timeStart(connectToDatabase.name);
   if (Object.values(cache).every(Boolean)) {
     logger.info("[DATABASE CACHED]");
-    console.timeEnd(connectToDatabase.name);
+    timeEnd();
 
     return {
       client: cache.client,
@@ -39,7 +38,7 @@ export async function connectToDatabase(): Promise<{
   cache.client = client;
   cache.db = db;
 
-  console.timeEnd(connectToDatabase.name);
+  timeEnd();
 
   return {
     client: cache.client,
