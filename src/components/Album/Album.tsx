@@ -1,29 +1,21 @@
 import {
+  lazy,
   MouseEvent,
   MutableRefObject,
+  Suspense,
   TouchEvent,
   useEffect,
   useRef,
   useState,
 } from "react";
 import { FormattedAlbum } from "api/albums";
-import styled from "styled-components";
+import styled, { css } from "styled-components";
 import { breakpoint, fontSize, space } from "theme";
 
-import {
-  DetailsArtist,
-  DetailsCover,
-  DetailsGrid,
-  DetailsHeader,
-  DetailsLabel,
-  DetailsPage,
-  DetailsSecondaryLabel,
-  DetailsTextContent,
-  DetailsTrack,
-  DetailsTrackList,
-} from ".";
+const loadAlbumDetailsComponent = () => import("./Album.Details");
+const AlbumDetails = lazy(loadAlbumDetailsComponent);
 
-export const Album = ({ album }: Props) => {
+const Album = ({ album }: Props) => {
   const [detailsViewVisible, setIsDetailViewVisible] = useState(false);
   const ref = useRef<HTMLDivElement | null>(null);
 
@@ -47,8 +39,18 @@ export const Album = ({ album }: Props) => {
   }
 
   return (
-    <Container tabIndex={0} onClick={handleShowDetailsView}>
-      <Cover src={album.coverImage} />
+    <Container
+      tabIndex={0}
+      onClick={handleShowDetailsView}
+      onMouseEnter={loadAlbumDetailsComponent}
+      onFocus={loadAlbumDetailsComponent}
+    >
+      <Cover
+        src={album.coverImage}
+        alt={`${album.artist} cover image`}
+        width="228"
+        height="228"
+      />
       <TextContent>
         <Artist>{album.artist}</Artist>
         <Title>
@@ -58,88 +60,17 @@ export const Album = ({ album }: Props) => {
 
       <DetailsPage isActive={detailsViewVisible} ref={ref}>
         {detailsViewVisible && (
-          <>
-            <DetailsHeader>
-              <DetailsCover src={album.coverImage} />
-              <DetailsTextContent>
-                <DetailsArtist>{album.artist}</DetailsArtist>
-                <DetailsSecondaryLabel>{album.title}</DetailsSecondaryLabel>
-              </DetailsTextContent>
-            </DetailsHeader>
-
-            <DetailsGrid>
-              <div>
-                <DetailsLabel>Release</DetailsLabel>
-                <DetailsSecondaryLabel>
-                  {album.releasedYear}
-                </DetailsSecondaryLabel>
-              </div>
-              <div>
-                <DetailsLabel>Label</DetailsLabel>
-                <DetailsSecondaryLabel>
-                  {album.label}, {album.labelCategoryNumber}
-                </DetailsSecondaryLabel>
-              </div>
-              <div>
-                <DetailsLabel>Printed</DetailsLabel>
-                <DetailsSecondaryLabel>
-                  {album.printedYear}
-                </DetailsSecondaryLabel>
-              </div>
-              <div>
-                <DetailsLabel>Format</DetailsLabel>
-                <DetailsSecondaryLabel>{album.format}</DetailsSecondaryLabel>
-              </div>
-              <div>
-                <DetailsLabel>Genre</DetailsLabel>
-                {album.genres.map(function renderGenre(genre) {
-                  return (
-                    <DetailsSecondaryLabel key={genre}>
-                      {genre}
-                    </DetailsSecondaryLabel>
-                  );
-                })}
-              </div>
-            </DetailsGrid>
-
-            <DetailsGrid>
-              <div>
-                <DetailsLabel>Tracklist</DetailsLabel>
-
-                <DetailsTrackList>
-                  {album.tracks.map(function renderTrack(track) {
-                    return (
-                      <DetailsTrack key={track.title}>
-                        {track.title}
-                      </DetailsTrack>
-                    );
-                  })}
-                </DetailsTrackList>
-              </div>
-
-              <div>
-                <DetailsLabel>Videos</DetailsLabel>
-
-                <DetailsTrackList>
-                  {album.videos.map(function renderLinkToVideo(video) {
-                    return (
-                      <DetailsTrack key={video.title + video.url}>
-                        <a href={video.url} target="_blank" rel="noreferrer">
-                          {video.title}
-                        </a>
-                      </DetailsTrack>
-                    );
-                  })}
-                </DetailsTrackList>
-              </div>
-            </DetailsGrid>
-          </>
+          <Suspense fallback={<div>Loading...</div>}>
+            <AlbumDetails album={album} />
+          </Suspense>
         )}
       </DetailsPage>
       {detailsViewVisible && <Overlay />}
     </Container>
   );
 };
+
+export default Album;
 
 interface Props {
   album: FormattedAlbum;
@@ -168,6 +99,36 @@ function useOnClickOutside(
   );
 }
 
+const DetailsPage = styled.div<{ isActive: boolean }>`
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: 100%;
+  bottom: 0;
+  overflow: auto;
+  background-color: #fff;
+  transition: all 0.5s ease 0s;
+  padding: ${space(4)};
+  display: flex;
+  flex-direction: column;
+  z-index: var(--zIndex-popup);
+  visibility: hidden;
+
+  ${function applyActiveStyle({ isActive }) {
+    return (
+      isActive &&
+      css`
+        visibility: visible;
+        left: calc(100% / 6);
+
+        ${breakpoint(1)} {
+          left: 50%;
+        }
+      `
+    );
+  }}
+`;
+
 const Overlay = styled.div`
   position: fixed;
   top: 0;
@@ -191,7 +152,7 @@ const Cover = styled.img`
   }
 `;
 
-const Container = styled.article`
+export const Container = styled.article`
   display: flex;
   flex-direction: row;
   cursor: pointer;

@@ -4,7 +4,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { catchChainedError } from "utils";
 
 export default async function handler(
-  _: NextApiRequest,
+  req: NextApiRequest,
   res: NextApiResponse<FormattedAlbum[]>
 ) {
   const albums = await getAlbums().catch(

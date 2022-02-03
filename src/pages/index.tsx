@@ -1,10 +1,13 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { FormattedAlbum } from "api/albums";
 import Head from "next/head";
 import styled from "styled-components";
 import { breakpoint, space } from "theme";
 
-import { Album } from "components/Album";
+const loadAlbumComponent = () => import("components/Album/Album");
+const Album = lazy(loadAlbumComponent);
+
+import { AlbumLoading } from "components/Album/Album.Loading";
 import { Filter, FilterOptions } from "components/Filter";
 
 const Home = () => {
@@ -21,12 +24,14 @@ const Home = () => {
   useEffect(function fetchAlbums() {
     fetch("/api/albums")
       .then((res) => res.json())
-      .then((albums) =>
-        setState({
+      .then((albums) => {
+        loadAlbumComponent();
+
+        return setState({
           status: "resolved",
           data: albums,
-        })
-      )
+        });
+      })
       .catch(() =>
         setState({
           status: "rejected",
@@ -79,18 +84,23 @@ const Home = () => {
       <Header>
         <Container>
           <Title>Vinyl Collection</Title>
-          <Filter onFilter={handleFilterAlbums} />
+          <Filter
+            onFilter={handleFilterAlbums}
+            disabled={status !== "resolved"}
+          />
         </Container>
       </Header>
 
       <Container>
         <Content>
-          {status === "pending" && <p>Loading collection...</p>}
+          {status === "pending" && <LoadingAlbumList />}
           {status === "resolved" && (
             <AlbumList>
-              {filteredAlbums.map(function renderAlbum(album) {
-                return <Album album={album} key={album.id} />;
-              })}
+              <Suspense fallback={<LoadingAlbumList />}>
+                {filteredAlbums.map(function renderAlbum(album) {
+                  return <Album album={album} key={album.id} />;
+                })}
+              </Suspense>
             </AlbumList>
           )}
           {status === "rejected" && (
@@ -103,6 +113,14 @@ const Home = () => {
     </div>
   );
 };
+
+const LoadingAlbumList = () => (
+  <AlbumList>
+    {new Array(12).fill(null).map((_, i) => (
+      <AlbumLoading key={`loadingAlbum-${i}`} />
+    ))}
+  </AlbumList>
+);
 
 const Container = styled.div`
   position: relative;

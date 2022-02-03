@@ -1,17 +1,39 @@
 /* eslint-disable @getify/proper-arrows/name */
-import { render, screen } from "@testing-library/react";
-import { RawRelease } from "api/albums";
-import mockDataReleases from "api/mocks/albums/releasesMockData.json";
-import { rest, server } from "api/mocks/server";
 import * as db from "db/db.connect";
-import { Db, MongoClient } from "mongodb";
 jest.mock("db/db.connect");
 const mockedDb = db as jest.Mocked<typeof db>;
 
+import { render, screen } from "@testing-library/react";
+import { RawRelease } from "api/albums";
+import { getApiAlbums, getMasterData, getReleases } from "api/mocks/albums";
+import mockDataReleases from "api/mocks/albums/releasesMockData.json";
+import { rest } from "api/mocks/server";
+import { Db, MongoClient } from "mongodb";
+import { setupServer } from "msw/node";
 import Home from "pages/index";
 
 console.log = jest.fn();
 console.time = jest.fn();
+
+const server = setupServer(getApiAlbums, getReleases(), getMasterData());
+
+const handlerCalled = jest.fn();
+
+beforeAll(() => {
+  server.listen({ onUnhandledRequest: "warn" });
+  server.events.on("request:start", (req) =>
+    handlerCalled(`${req.method}: ${req.url.toString()}`)
+  );
+});
+beforeEach(() => {
+  handlerCalled.mockReset();
+});
+afterEach(() => {
+  server.resetHandlers();
+});
+afterAll(() => {
+  server.close();
+});
 
 test("should not insert new releases in db if up to date", async () => {
   const insertMany = jest.fn(() => Promise.resolve(true));
@@ -40,15 +62,11 @@ test("should not insert new releases in db if up to date", async () => {
     })
   );
 
-  expect(insertMany).toHaveBeenCalledTimes(0);
-  expect(deleteMany).toHaveBeenCalledTimes(0);
-
   render(<Home />);
 
-  const pageTitle = await screen.findByText("Vinyl Collection");
-  expect(pageTitle).toBeInTheDocument();
-
-  expect(screen.getAllByRole("article")).toHaveLength(1);
+  expect(await screen.findAllByRole("article")).toHaveLength(1);
+  expect(insertMany).toHaveBeenCalledTimes(0);
+  expect(deleteMany).toHaveBeenCalledTimes(0);
 });
 
 test("should insert new releases in db", async () => {
@@ -76,15 +94,11 @@ test("should insert new releases in db", async () => {
     })
   );
 
-  expect(insertMany).toHaveBeenCalledTimes(1);
-  expect(deleteMany).toHaveBeenCalledTimes(0);
-
   render(<Home />);
 
-  const pageTitle = await screen.findByText("Vinyl Collection");
-  expect(pageTitle).toBeInTheDocument();
-
-  expect(screen.getAllByRole("article")).toHaveLength(1);
+  expect(await screen.findAllByRole("article")).toHaveLength(1);
+  expect(insertMany).toHaveBeenCalledTimes(1);
+  expect(deleteMany).toHaveBeenCalledTimes(0);
 });
 
 test("should remove releases from db", async () => {
@@ -114,15 +128,11 @@ test("should remove releases from db", async () => {
     })
   );
 
-  expect(insertMany).toHaveBeenCalledTimes(1);
-  expect(deleteMany).toHaveBeenCalledTimes(1);
-
   render(<Home />);
 
-  const pageTitle = await screen.findByText("Vinyl Collection");
-  expect(pageTitle).toBeInTheDocument();
-
-  expect(screen.getAllByRole("article")).toHaveLength(1);
+  expect(await screen.findAllByRole("article")).toHaveLength(1);
+  expect(insertMany).toHaveBeenCalledTimes(1);
+  expect(deleteMany).toHaveBeenCalledTimes(1);
 });
 
 describe("Error handling", () => {
@@ -131,10 +141,7 @@ describe("Error handling", () => {
 
     render(<Home />);
 
-    const pageTitle = await screen.findByText("Vinyl Collection");
-    expect(pageTitle).toBeInTheDocument();
-
-    expect(screen.getByText(errorMessage)).toBeInTheDocument();
+    expect(await screen.findByText(errorMessage)).toBeInTheDocument();
   });
 
   test("should show error message if db fails to update", async () => {
@@ -151,15 +158,11 @@ describe("Error handling", () => {
       )
     );
 
-    expect(insertMany).toHaveBeenCalledTimes(0);
-    expect(deleteMany).toHaveBeenCalledTimes(0);
-
     render(<Home />);
 
-    const pageTitle = await screen.findByText("Vinyl Collection");
-    expect(pageTitle).toBeInTheDocument();
-
-    expect(screen.getByText(errorMessage)).toBeInTheDocument();
+    expect(await screen.findByText(errorMessage)).toBeInTheDocument();
+    expect(insertMany).toHaveBeenCalledTimes(0);
+    expect(deleteMany).toHaveBeenCalledTimes(0);
   });
 
   test("should show error when error in external collection request", async () => {
@@ -192,15 +195,11 @@ describe("Error handling", () => {
       )
     );
 
-    expect(insertMany).toHaveBeenCalledTimes(0);
-    expect(deleteMany).toHaveBeenCalledTimes(0);
-
     render(<Home />);
 
-    const pageTitle = await screen.findByText("Vinyl Collection");
-    expect(pageTitle).toBeInTheDocument();
-
-    expect(screen.getByText(errorMessage)).toBeInTheDocument();
+    expect(await screen.findByText(errorMessage)).toBeInTheDocument();
+    expect(insertMany).toHaveBeenCalledTimes(0);
+    expect(deleteMany).toHaveBeenCalledTimes(0);
   });
 
   test("should not update db when masterdata request fail", async () => {
@@ -243,15 +242,11 @@ describe("Error handling", () => {
       )
     );
 
-    expect(insertMany).toHaveBeenCalledTimes(1);
-    expect(deleteMany).toHaveBeenCalledTimes(0);
-
     render(<Home />);
 
-    const pageTitle = await screen.findByText("Vinyl Collection");
-    expect(pageTitle).toBeInTheDocument();
-
-    expect(screen.getAllByRole("article")).toHaveLength(1);
+    expect(await screen.findAllByRole("article")).toHaveLength(1);
+    expect(insertMany).toHaveBeenCalledTimes(1);
+    expect(deleteMany).toHaveBeenCalledTimes(0);
   });
 });
 

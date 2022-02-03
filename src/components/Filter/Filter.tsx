@@ -2,7 +2,7 @@ import { useEffect, useReducer, useRef, useState } from "react";
 import styled from "styled-components";
 import { space } from "theme";
 
-export const Filter = ({ onFilter }: Props) => {
+export const Filter = ({ onFilter, disabled }: Props) => {
   const [filter, setFilter] = useReducer(
     (prevState: FilterOptions, newPartialState: Partial<FilterOptions>) => ({
       ...prevState,
@@ -45,12 +45,14 @@ export const Filter = ({ onFilter }: Props) => {
         value={filter.query}
         onKeyDown={handleKeyDownEvent}
         onChange={handleFilter}
+        disabled={disabled}
       />
       <Label>
         <Checkbox
           name="includeTrack"
           checked={filter.includeTrack}
           onChange={handleFilter}
+          disabled={disabled}
         />
         <span>Tracks</span>
       </Label>
@@ -60,6 +62,7 @@ export const Filter = ({ onFilter }: Props) => {
 
 interface Props {
   onFilter: (arg: FilterOptions) => void;
+  disabled: boolean;
 }
 
 export type FilterOptions = {
