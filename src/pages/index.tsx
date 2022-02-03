@@ -1,19 +1,51 @@
-import { useState } from "react";
-import { FormattedAlbum, getAlbums } from "api/albums";
-import { GetServerSideProps, InferGetServerSidePropsType } from "next";
+import { lazy, Suspense, useEffect, useState } from "react";
+import { FormattedAlbum } from "api/albums";
 import Head from "next/head";
 import styled from "styled-components";
 import { breakpoint, space } from "theme";
 
-import { Album } from "components/Album";
-import { Filter, FilterOptions } from "components/Filter";
-import { catchChainedError, logger } from "utils";
+const loadAlbumComponent = () => import("components/Album/Album");
+const Album = lazy(loadAlbumComponent);
 
-const Home = ({
-  albums,
-  status,
-}: InferGetServerSidePropsType<typeof getServerSideProps>) => {
+import { AlbumLoading } from "components/Album/Album.Loading";
+import { Filter, FilterOptions } from "components/Filter";
+
+const Home = () => {
+  const [{ status, data: albums }, setState] = useState<{
+    status: "pending" | "resolved" | "rejected";
+    data: FormattedAlbum[];
+  }>({
+    status: "pending",
+    data: [],
+  });
+
   const [filteredAlbums, setFilteredAlbums] = useState(albums);
+
+  useEffect(function fetchAlbums() {
+    fetch("/api/albums")
+      .then((res) => res.json())
+      .then((albums) => {
+        loadAlbumComponent();
+
+        return setState({
+          status: "resolved",
+          data: albums,
+        });
+      })
+      .catch(() =>
+        setState({
+          status: "rejected",
+          data: [],
+        })
+      );
+  }, []);
+
+  useEffect(
+    function updateFilteredAlbums() {
+      albums.length && setFilteredAlbums(albums);
+    },
+    [albums]
+  );
 
   function handleFilterAlbums({ query, includeTrack }: FilterOptions) {
     if (query === "") {
@@ -52,17 +84,25 @@ const Home = ({
       <Header>
         <Container>
           <Title>Vinyl Collection</Title>
-          <Filter onFilter={handleFilterAlbums} />
+          <Filter
+            onFilter={handleFilterAlbums}
+            disabled={status !== "resolved"}
+          />
         </Container>
       </Header>
 
       <Container>
         <Content>
-          <AlbumList>
-            {filteredAlbums.map(function renderAlbum(album) {
-              return <Album album={album} key={album.id} />;
-            })}
-          </AlbumList>
+          {status === "pending" && <LoadingAlbumList />}
+          {status === "resolved" && (
+            <AlbumList>
+              <Suspense fallback={<LoadingAlbumList />}>
+                {filteredAlbums.map(function renderAlbum(album) {
+                  return <Album album={album} key={album.id} />;
+                })}
+              </Suspense>
+            </AlbumList>
+          )}
           {status === "rejected" && (
             <ErrorMessage>
               Something went wrong when fetching albums
@@ -74,28 +114,13 @@ const Home = ({
   );
 };
 
-export const getServerSideProps: GetServerSideProps<{
-  albums: FormattedAlbum[];
-  status: "resolved" | "rejected";
-}> = async () => {
-  const logTimeEnd = logger.timeStart(getAlbums.name);
-  const albums = await getAlbums().catch(
-    catchChainedError("Could not get albums")
-  );
-  logTimeEnd();
-
-  if (albums instanceof Error) {
-    logger.error(albums.stack);
-
-    return {
-      props: { albums: [], status: "rejected" },
-    };
-  }
-
-  return {
-    props: { albums, status: "resolved" },
-  };
-};
+const LoadingAlbumList = () => (
+  <AlbumList>
+    {new Array(12).fill(null).map((_, i) => (
+      <AlbumLoading key={`loadingAlbum-${i}`} />
+    ))}
+  </AlbumList>
+);
 
 const Container = styled.div`
   position: relative;

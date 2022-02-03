@@ -1,18 +1,39 @@
 /* eslint-disable @getify/proper-arrows/name */
-import { render, screen } from "@testing-library/react";
-import { RawRelease } from "api/albums";
-import mockDataReleases from "api/mocks/albums/releasesMockData.json";
-import { rest, server } from "api/mocks/server";
 import * as db from "db/db.connect";
-import { Db, MongoClient } from "mongodb";
 jest.mock("db/db.connect");
 const mockedDb = db as jest.Mocked<typeof db>;
 
-import { GetServerSidePropsContext } from "next";
-import Home, { getServerSideProps } from "pages/index";
+import { render, screen } from "@testing-library/react";
+import { RawRelease } from "api/albums";
+import { getApiAlbums, getMasterData, getReleases } from "api/mocks/albums";
+import mockDataReleases from "api/mocks/albums/releasesMockData.json";
+import { rest } from "api/mocks/server";
+import { Db, MongoClient } from "mongodb";
+import { setupServer } from "msw/node";
+import Home from "pages/index";
 
 console.log = jest.fn();
 console.time = jest.fn();
+
+const server = setupServer(getApiAlbums, getReleases(), getMasterData());
+
+const handlerCalled = jest.fn();
+
+beforeAll(() => {
+  server.listen({ onUnhandledRequest: "warn" });
+  server.events.on("request:start", (req) =>
+    handlerCalled(`${req.method}: ${req.url.toString()}`)
+  );
+});
+beforeEach(() => {
+  handlerCalled.mockReset();
+});
+afterEach(() => {
+  server.resetHandlers();
+});
+afterAll(() => {
+  server.close();
+});
 
 test("should not insert new releases in db if up to date", async () => {
   const insertMany = jest.fn(() => Promise.resolve(true));
@@ -41,17 +62,11 @@ test("should not insert new releases in db if up to date", async () => {
     })
   );
 
-  const props = await runGetServerSideProps();
+  render(<Home />);
 
+  expect(await screen.findAllByRole("article")).toHaveLength(1);
   expect(insertMany).toHaveBeenCalledTimes(0);
   expect(deleteMany).toHaveBeenCalledTimes(0);
-
-  render(<Home {...props} />);
-
-  const pageTitle = await screen.findByText("Vinyl Collection");
-  expect(pageTitle).toBeInTheDocument();
-
-  expect(screen.getAllByRole("article")).toHaveLength(1);
 });
 
 test("should insert new releases in db", async () => {
@@ -79,17 +94,11 @@ test("should insert new releases in db", async () => {
     })
   );
 
-  const props = await runGetServerSideProps();
+  render(<Home />);
 
+  expect(await screen.findAllByRole("article")).toHaveLength(1);
   expect(insertMany).toHaveBeenCalledTimes(1);
   expect(deleteMany).toHaveBeenCalledTimes(0);
-
-  render(<Home {...props} />);
-
-  const pageTitle = await screen.findByText("Vinyl Collection");
-  expect(pageTitle).toBeInTheDocument();
-
-  expect(screen.getAllByRole("article")).toHaveLength(1);
 });
 
 test("should remove releases from db", async () => {
@@ -119,31 +128,20 @@ test("should remove releases from db", async () => {
     })
   );
 
-  const props = await runGetServerSideProps();
+  render(<Home />);
 
+  expect(await screen.findAllByRole("article")).toHaveLength(1);
   expect(insertMany).toHaveBeenCalledTimes(1);
   expect(deleteMany).toHaveBeenCalledTimes(1);
-
-  render(<Home {...props} />);
-
-  const pageTitle = await screen.findByText("Vinyl Collection");
-  expect(pageTitle).toBeInTheDocument();
-
-  expect(screen.getAllByRole("article")).toHaveLength(1);
 });
 
 describe("Error handling", () => {
   test("should show error message if db connection failed", async () => {
     mockedDb.connectToDatabase.mockRejectedValue("Database connection error");
 
-    const props = await runGetServerSideProps();
+    render(<Home />);
 
-    render(<Home {...props} />);
-
-    const pageTitle = await screen.findByText("Vinyl Collection");
-    expect(pageTitle).toBeInTheDocument();
-
-    expect(screen.getByText(errorMessage)).toBeInTheDocument();
+    expect(await screen.findByText(errorMessage)).toBeInTheDocument();
   });
 
   test("should show error message if db fails to update", async () => {
@@ -160,17 +158,11 @@ describe("Error handling", () => {
       )
     );
 
-    const props = await runGetServerSideProps();
+    render(<Home />);
 
+    expect(await screen.findByText(errorMessage)).toBeInTheDocument();
     expect(insertMany).toHaveBeenCalledTimes(0);
     expect(deleteMany).toHaveBeenCalledTimes(0);
-
-    render(<Home {...props} />);
-
-    const pageTitle = await screen.findByText("Vinyl Collection");
-    expect(pageTitle).toBeInTheDocument();
-
-    expect(screen.getByText(errorMessage)).toBeInTheDocument();
   });
 
   test("should show error when error in external collection request", async () => {
@@ -203,17 +195,11 @@ describe("Error handling", () => {
       )
     );
 
-    const props = await runGetServerSideProps();
+    render(<Home />);
 
+    expect(await screen.findByText(errorMessage)).toBeInTheDocument();
     expect(insertMany).toHaveBeenCalledTimes(0);
     expect(deleteMany).toHaveBeenCalledTimes(0);
-
-    render(<Home {...props} />);
-
-    const pageTitle = await screen.findByText("Vinyl Collection");
-    expect(pageTitle).toBeInTheDocument();
-
-    expect(screen.getByText(errorMessage)).toBeInTheDocument();
   });
 
   test("should not update db when masterdata request fail", async () => {
@@ -256,17 +242,11 @@ describe("Error handling", () => {
       )
     );
 
-    const props = await runGetServerSideProps();
+    render(<Home />);
 
+    expect(await screen.findAllByRole("article")).toHaveLength(1);
     expect(insertMany).toHaveBeenCalledTimes(1);
     expect(deleteMany).toHaveBeenCalledTimes(0);
-
-    render(<Home {...props} />);
-
-    const pageTitle = await screen.findByText("Vinyl Collection");
-    expect(pageTitle).toBeInTheDocument();
-
-    expect(screen.getAllByRole("article")).toHaveLength(1);
   });
 });
 
@@ -290,17 +270,5 @@ const mockDatabase = ({
     })),
   } as unknown as Db,
 });
-
-async function runGetServerSideProps() {
-  const { props } = (await getServerSideProps(
-    {} as unknown as GetServerSidePropsContext
-  )) as unknown as { props: any };
-
-  if (!("albums" in props)) {
-    throw new Error("Error in props");
-  }
-
-  return props;
-}
 
 const errorMessage = "Something went wrong when fetching albums";

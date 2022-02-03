@@ -1,5 +1,6 @@
 import { connectToDatabase } from "db/db.connect";
 import { Db } from "mongodb";
+import { NextApiRequest, NextApiResponse } from "next";
 
 import { catchChainedError, logger, throwChainedError } from "utils";
 
@@ -12,6 +13,21 @@ import {
 } from ".";
 
 const COLLECTION_ALBUMS = "albums";
+
+export default async function handler(
+  _: NextApiRequest,
+  res: NextApiResponse<FormattedAlbum[]>
+) {
+  const albums = await getAlbums().catch(
+    catchChainedError("Could not get albums")
+  );
+
+  if (albums instanceof Error) {
+    return res.status(500);
+  }
+
+  res.status(200).json(albums);
+}
 
 export async function getAlbums() {
   const { db } = await connectToDatabase().catch(
@@ -172,7 +188,7 @@ async function request<T>(url: string, init: RequestInit): Promise<T> {
   if (!response.ok) {
     return Promise.reject(
       new Error(
-        `Response to "${url}" failed with status code "${
+        `Request to "${url}" failed with status code "${
           response.status
         }" and text "${await response.text()}"`
       )
