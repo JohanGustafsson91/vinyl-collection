@@ -1,4 +1,4 @@
-import { useEffect, useReducer, useRef, useState } from "react";
+import { useEffect, useReducer, useState } from "react";
 import styled from "styled-components";
 import { space } from "theme";
 
@@ -15,16 +15,15 @@ export const Filter = ({ onFilter, disabled }: Props) => {
   );
 
   const debouncedQuery = useDebounced(filter.query, 500);
-  const refCallbackFunctionOnFilter = useRef(onFilter);
 
   useEffect(
     function callBackWhenChangedFilter() {
-      refCallbackFunctionOnFilter.current({
+      onFilter({
         query: debouncedQuery,
         includeTrack: filter.includeTrack,
       });
     },
-    [debouncedQuery, filter.includeTrack]
+    [debouncedQuery, filter.includeTrack, onFilter]
   );
 
   function handleKeyDownEvent(e: React.KeyboardEvent<HTMLInputElement>) {

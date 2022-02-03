@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useState } from "react";
 import { FormattedAlbum } from "api/albums";
 import Head from "next/head";
 import styled from "styled-components";
@@ -47,31 +47,34 @@ const Home = () => {
     [albums]
   );
 
-  function handleFilterAlbums({ query, includeTrack }: FilterOptions) {
-    if (query === "") {
-      return setFilteredAlbums(albums);
-    }
+  const handleFilterAlbums = useCallback(
+    ({ query, includeTrack }: FilterOptions) => {
+      if (query === "") {
+        return setFilteredAlbums(albums);
+      }
 
-    const albumsFiltered = albums.filter(function filterAlbum(album) {
-      const matchArtist = album.artist
-        .toLowerCase()
-        .includes(query.toLowerCase());
+      const albumsFiltered = albums.filter(function filterAlbum(album) {
+        const matchArtist = album.artist
+          .toLowerCase()
+          .includes(query.toLowerCase());
 
-      const matchTitle = album.title
-        .toLowerCase()
-        .includes(query.toLowerCase());
+        const matchTitle = album.title
+          .toLowerCase()
+          .includes(query.toLowerCase());
 
-      const matchTrack = includeTrack
-        ? album.tracks.some(function textIncludesString(track) {
-            return track.title.toLowerCase().includes(query.toLowerCase());
-          })
-        : false;
+        const matchTrack = includeTrack
+          ? album.tracks.some(function textIncludesString(track) {
+              return track.title.toLowerCase().includes(query.toLowerCase());
+            })
+          : false;
 
-      return [matchArtist, matchTitle, matchTrack].some(Boolean);
-    });
+        return [matchArtist, matchTitle, matchTrack].some(Boolean);
+      });
 
-    setFilteredAlbums(albumsFiltered);
-  }
+      setFilteredAlbums(albumsFiltered);
+    },
+    [albums]
+  );
 
   return (
     <div>
