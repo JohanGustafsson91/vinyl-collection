@@ -1,19 +1,46 @@
-import { useState } from "react";
-import { FormattedAlbum, getAlbums } from "api/albums";
-import { GetServerSideProps, InferGetServerSidePropsType } from "next";
+import { useEffect, useState } from "react";
+import { FormattedAlbum } from "api/albums";
 import Head from "next/head";
 import styled from "styled-components";
 import { breakpoint, space } from "theme";
 
 import { Album } from "components/Album";
 import { Filter, FilterOptions } from "components/Filter";
-import { catchChainedError, logger } from "utils";
 
-const Home = ({
-  albums,
-  status,
-}: InferGetServerSidePropsType<typeof getServerSideProps>) => {
+const Home = () => {
+  const [{ status, data: albums }, setState] = useState<{
+    status: "pending" | "resolved" | "rejected";
+    data: FormattedAlbum[];
+  }>({
+    status: "pending",
+    data: [],
+  });
+
   const [filteredAlbums, setFilteredAlbums] = useState(albums);
+
+  useEffect(function fetchAlbums() {
+    fetch("/api/albums")
+      .then((res) => res.json())
+      .then((albums) =>
+        setState({
+          status: "resolved",
+          data: albums,
+        })
+      )
+      .catch(() =>
+        setState({
+          status: "rejected",
+          data: [],
+        })
+      );
+  }, []);
+
+  useEffect(
+    function updateFilteredAlbums() {
+      albums.length && setFilteredAlbums(albums);
+    },
+    [albums]
+  );
 
   function handleFilterAlbums({ query, includeTrack }: FilterOptions) {
     if (query === "") {
@@ -58,11 +85,14 @@ const Home = ({
 
       <Container>
         <Content>
-          <AlbumList>
-            {filteredAlbums.map(function renderAlbum(album) {
-              return <Album album={album} key={album.id} />;
-            })}
-          </AlbumList>
+          {status === "pending" && <p>Loading collection...</p>}
+          {status === "resolved" && (
+            <AlbumList>
+              {filteredAlbums.map(function renderAlbum(album) {
+                return <Album album={album} key={album.id} />;
+              })}
+            </AlbumList>
+          )}
           {status === "rejected" && (
             <ErrorMessage>
               Something went wrong when fetching albums
@@ -72,29 +102,6 @@ const Home = ({
       </Container>
     </div>
   );
-};
-
-export const getServerSideProps: GetServerSideProps<{
-  albums: FormattedAlbum[];
-  status: "resolved" | "rejected";
-}> = async () => {
-  const logTimeEnd = logger.timeStart(getAlbums.name);
-  const albums = await getAlbums().catch(
-    catchChainedError("Could not get albums")
-  );
-  logTimeEnd();
-
-  if (albums instanceof Error) {
-    logger.error(albums.stack);
-
-    return {
-      props: { albums: [], status: "rejected" },
-    };
-  }
-
-  return {
-    props: { albums, status: "resolved" },
-  };
 };
 
 const Container = styled.div`
