@@ -8,8 +8,7 @@ import { Db, MongoClient } from "mongodb";
 jest.mock("db/db.connect");
 const mockedDb = db as jest.Mocked<typeof db>;
 
-import { GetServerSidePropsContext } from "next";
-import Home, { getServerSideProps } from "pages/index";
+import Home from "pages/index";
 
 console.log = jest.fn();
 console.time = jest.fn();
@@ -41,12 +40,10 @@ test("should not insert new releases in db if up to date", async () => {
     })
   );
 
-  const props = await runGetServerSideProps();
-
   expect(insertMany).toHaveBeenCalledTimes(0);
   expect(deleteMany).toHaveBeenCalledTimes(0);
 
-  render(<Home {...props} />);
+  render(<Home />);
 
   const pageTitle = await screen.findByText("Vinyl Collection");
   expect(pageTitle).toBeInTheDocument();
@@ -79,12 +76,10 @@ test("should insert new releases in db", async () => {
     })
   );
 
-  const props = await runGetServerSideProps();
-
   expect(insertMany).toHaveBeenCalledTimes(1);
   expect(deleteMany).toHaveBeenCalledTimes(0);
 
-  render(<Home {...props} />);
+  render(<Home />);
 
   const pageTitle = await screen.findByText("Vinyl Collection");
   expect(pageTitle).toBeInTheDocument();
@@ -119,12 +114,10 @@ test("should remove releases from db", async () => {
     })
   );
 
-  const props = await runGetServerSideProps();
-
   expect(insertMany).toHaveBeenCalledTimes(1);
   expect(deleteMany).toHaveBeenCalledTimes(1);
 
-  render(<Home {...props} />);
+  render(<Home />);
 
   const pageTitle = await screen.findByText("Vinyl Collection");
   expect(pageTitle).toBeInTheDocument();
@@ -136,9 +129,7 @@ describe("Error handling", () => {
   test("should show error message if db connection failed", async () => {
     mockedDb.connectToDatabase.mockRejectedValue("Database connection error");
 
-    const props = await runGetServerSideProps();
-
-    render(<Home {...props} />);
+    render(<Home />);
 
     const pageTitle = await screen.findByText("Vinyl Collection");
     expect(pageTitle).toBeInTheDocument();
@@ -160,12 +151,10 @@ describe("Error handling", () => {
       )
     );
 
-    const props = await runGetServerSideProps();
-
     expect(insertMany).toHaveBeenCalledTimes(0);
     expect(deleteMany).toHaveBeenCalledTimes(0);
 
-    render(<Home {...props} />);
+    render(<Home />);
 
     const pageTitle = await screen.findByText("Vinyl Collection");
     expect(pageTitle).toBeInTheDocument();
@@ -203,12 +192,10 @@ describe("Error handling", () => {
       )
     );
 
-    const props = await runGetServerSideProps();
-
     expect(insertMany).toHaveBeenCalledTimes(0);
     expect(deleteMany).toHaveBeenCalledTimes(0);
 
-    render(<Home {...props} />);
+    render(<Home />);
 
     const pageTitle = await screen.findByText("Vinyl Collection");
     expect(pageTitle).toBeInTheDocument();
@@ -256,12 +243,10 @@ describe("Error handling", () => {
       )
     );
 
-    const props = await runGetServerSideProps();
-
     expect(insertMany).toHaveBeenCalledTimes(1);
     expect(deleteMany).toHaveBeenCalledTimes(0);
 
-    render(<Home {...props} />);
+    render(<Home />);
 
     const pageTitle = await screen.findByText("Vinyl Collection");
     expect(pageTitle).toBeInTheDocument();
@@ -290,17 +275,5 @@ const mockDatabase = ({
     })),
   } as unknown as Db,
 });
-
-async function runGetServerSideProps() {
-  const { props } = (await getServerSideProps(
-    {} as unknown as GetServerSidePropsContext
-  )) as unknown as { props: any };
-
-  if (!("albums" in props)) {
-    throw new Error("Error in props");
-  }
-
-  return props;
-}
 
 const errorMessage = "Something went wrong when fetching albums";
