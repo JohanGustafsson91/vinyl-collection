@@ -6,7 +6,7 @@ const loadingAnimation = keyframes`
 }
 50%,
 100% {
-  transform: translateX(460px);
+  transform: translateX(400px);
 }
 `;
 
@@ -31,7 +31,7 @@ export const SkeletonItem = styled.div<{
     left: 0;
     width: ${(props) => (props.width ? `${props.width}px` : "auto")};
     height: 100%;
-    background: linear-gradient(to right, #f2f2f2, #ddd, #f2f2f2);
-    animation: ${loadingAnimation} 2s infinite linear;
+    background: linear-gradient(to right, #605f76, #ddd, #f2f2f2);
+    animation: ${loadingAnimation} 1.5s infinite linear;
   }
 `;
