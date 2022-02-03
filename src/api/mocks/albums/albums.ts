@@ -67,7 +67,6 @@ function withHandler(
   headers?: [string, string][],
   reqOverride?: Record<string, unknown>
 ) {
-  console.log("with handler");
   return async (req: any, res: any, ctx: any) => {
     headers?.forEach(([name, value]) => req.headers.set(name, value));
     const { status, data } = await handler(
@@ -95,7 +94,6 @@ const handler = (req: MockedRequest, res: ResponseComposition) => {
     query[k] = v;
   });
 
-  console.log("handler");
   return async (handler: NextApiHandler) => {
     void (await handler(
       { ...req, query } as unknown as NextApiRequest,

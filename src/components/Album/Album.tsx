@@ -152,7 +152,7 @@ const Cover = styled.img`
   }
 `;
 
-export const Container = styled.article`
+const Container = styled.article`
   display: flex;
   flex-direction: row;
   cursor: pointer;

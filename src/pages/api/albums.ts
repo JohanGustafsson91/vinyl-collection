@@ -1,10 +1,10 @@
 import { FormattedAlbum, getAlbums } from "api/albums";
 import { NextApiRequest, NextApiResponse } from "next";
 
-import { catchChainedError } from "utils";
+import { catchChainedError, logger } from "utils";
 
 export default async function handler(
-  req: NextApiRequest,
+  _: NextApiRequest,
   res: NextApiResponse<FormattedAlbum[]>
 ) {
   const albums = await getAlbums().catch(
@@ -12,6 +12,7 @@ export default async function handler(
   );
 
   if (albums instanceof Error) {
+    logger.error(albums.message);
     return res.status(500);
   }
 
