@@ -67,6 +67,13 @@ test("should not insert new releases in db if up to date", async () => {
   expect(await screen.findAllByRole("article")).toHaveLength(1);
   expect(insertMany).toHaveBeenCalledTimes(0);
   expect(deleteMany).toHaveBeenCalledTimes(0);
+
+  expect(handlerCalled.mock.calls.flat()).toMatchInlineSnapshot(`
+Array [
+  "GET: http://localhost/api/albums",
+  "GET: https://api.discogs.com/users/*",
+]
+`);
 });
 
 test("should insert new releases in db", async () => {
@@ -99,6 +106,13 @@ test("should insert new releases in db", async () => {
   expect(await screen.findAllByRole("article")).toHaveLength(1);
   expect(insertMany).toHaveBeenCalledTimes(1);
   expect(deleteMany).toHaveBeenCalledTimes(0);
+  expect(handlerCalled.mock.calls.flat()).toMatchInlineSnapshot(`
+Array [
+  "GET: http://localhost/api/albums",
+  "GET: https://api.discogs.com/users/*",
+  "GET: https://api.discogs.com/masters/24155",
+]
+`);
 });
 
 test("should remove releases from db", async () => {
@@ -133,6 +147,13 @@ test("should remove releases from db", async () => {
   expect(await screen.findAllByRole("article")).toHaveLength(1);
   expect(insertMany).toHaveBeenCalledTimes(1);
   expect(deleteMany).toHaveBeenCalledTimes(1);
+  expect(handlerCalled.mock.calls.flat()).toMatchInlineSnapshot(`
+Array [
+  "GET: http://localhost/api/albums",
+  "GET: https://api.discogs.com/users/*",
+  "GET: https://api.discogs.com/masters/4126",
+]
+`);
 });
 
 describe("Error handling", () => {
@@ -163,6 +184,12 @@ describe("Error handling", () => {
     expect(await screen.findByText(errorMessage)).toBeInTheDocument();
     expect(insertMany).toHaveBeenCalledTimes(0);
     expect(deleteMany).toHaveBeenCalledTimes(0);
+    expect(handlerCalled.mock.calls.flat()).toMatchInlineSnapshot(`
+Array [
+  "GET: http://localhost/api/albums",
+  "GET: https://api.discogs.com/users/*",
+]
+`);
   });
 
   test("should show error when error in external collection request", async () => {
@@ -200,6 +227,12 @@ describe("Error handling", () => {
     expect(await screen.findByText(errorMessage)).toBeInTheDocument();
     expect(insertMany).toHaveBeenCalledTimes(0);
     expect(deleteMany).toHaveBeenCalledTimes(0);
+    expect(handlerCalled.mock.calls.flat()).toMatchInlineSnapshot(`
+Array [
+  "GET: http://localhost/api/albums",
+  "GET: https://api.discogs.com/users/*",
+]
+`);
   });
 
   test("should not update db when masterdata request fail", async () => {
@@ -247,6 +280,14 @@ describe("Error handling", () => {
     expect(await screen.findAllByRole("article")).toHaveLength(1);
     expect(insertMany).toHaveBeenCalledTimes(1);
     expect(deleteMany).toHaveBeenCalledTimes(0);
+    expect(handlerCalled.mock.calls.flat()).toMatchInlineSnapshot(`
+Array [
+  "GET: http://localhost/api/albums",
+  "GET: https://api.discogs.com/users/*",
+  "GET: https://api.discogs.com/masters/24155",
+  "GET: https://api.discogs.com/masters/4126",
+]
+`);
   });
 });
 
