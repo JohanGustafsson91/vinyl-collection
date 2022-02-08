@@ -7,4 +7,7 @@ module.exports = withPWA({
     skipWaiting: true,
   },
   reactStrictMode: false,
+  images: {
+    domains: ["img.discogs.com", "i.discogs.com"],
+  },
 });

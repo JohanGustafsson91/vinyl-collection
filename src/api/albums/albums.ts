@@ -1,6 +1,5 @@
 import { connectToDatabase } from "db/db.connect";
 import { Db } from "mongodb";
-import { NextApiRequest, NextApiResponse } from "next";
 
 import { catchChainedError, logger, throwChainedError } from "utils";
 
@@ -13,21 +12,6 @@ import {
 } from ".";
 
 const COLLECTION_ALBUMS = "albums";
-
-export default async function handler(
-  _: NextApiRequest,
-  res: NextApiResponse<FormattedAlbum[]>
-) {
-  const albums = await getAlbums().catch(
-    catchChainedError("Could not get albums")
-  );
-
-  if (albums instanceof Error) {
-    return res.status(500);
-  }
-
-  res.status(200).json(albums);
-}
 
 export async function getAlbums() {
   const { db } = await connectToDatabase().catch(
@@ -76,6 +60,18 @@ export async function getAlbums() {
   ];
 
   return getFormattedAlbums(payload);
+}
+
+export async function getAlbumsFromDatabase() {
+  const { db } = await connectToDatabase().catch(
+    throwChainedError("Could not connect to database")
+  );
+
+  const albums = await getStoredAlbumsFromDb(db).catch(
+    throwChainedError("Could not get albums from database")
+  );
+
+  return getFormattedAlbums(albums);
 }
 
 async function getStoredAlbumsFromDb(db: Db) {

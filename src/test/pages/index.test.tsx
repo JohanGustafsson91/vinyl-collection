@@ -62,7 +62,7 @@ test("should not insert new releases in db if up to date", async () => {
     })
   );
 
-  render(<Home />);
+  render(<Home syncCollection={true} />);
 
   expect(await screen.findAllByRole("article")).toHaveLength(1);
   expect(insertMany).toHaveBeenCalledTimes(0);
@@ -70,7 +70,7 @@ test("should not insert new releases in db if up to date", async () => {
 
   expect(handlerCalled.mock.calls.flat()).toMatchInlineSnapshot(`
 Array [
-  "GET: http://localhost/api/albums",
+  "GET: http://localhost/api/albums?syncCollection=true",
   "GET: https://api.discogs.com/users/*",
 ]
 `);
@@ -101,16 +101,44 @@ test("should insert new releases in db", async () => {
     })
   );
 
-  render(<Home />);
+  render(<Home syncCollection={true} />);
 
   expect(await screen.findAllByRole("article")).toHaveLength(1);
   expect(insertMany).toHaveBeenCalledTimes(1);
   expect(deleteMany).toHaveBeenCalledTimes(0);
   expect(handlerCalled.mock.calls.flat()).toMatchInlineSnapshot(`
 Array [
-  "GET: http://localhost/api/albums",
+  "GET: http://localhost/api/albums?syncCollection=true",
   "GET: https://api.discogs.com/users/*",
   "GET: https://api.discogs.com/masters/24155",
+]
+`);
+});
+
+test("should fetch albums from database if no sync specified", async () => {
+  const insertMany = jest.fn(() => Promise.resolve(true));
+  const deleteMany = jest.fn(() => Promise.resolve(true));
+  const findCollections = jest.fn(() =>
+    Promise.resolve([mockDataReleases.releases[0]])
+  );
+  mockedDb.connectToDatabase.mockResolvedValue(
+    Promise.resolve(
+      mockDatabase({
+        findCollections,
+        insertMany,
+        deleteMany,
+      })
+    )
+  );
+
+  render(<Home syncCollection={false} />);
+
+  expect(await screen.findAllByRole("article")).toHaveLength(1);
+  expect(insertMany).toHaveBeenCalledTimes(0);
+  expect(deleteMany).toHaveBeenCalledTimes(0);
+  expect(handlerCalled.mock.calls.flat()).toMatchInlineSnapshot(`
+Array [
+  "GET: http://localhost/api/albums?syncCollection=false",
 ]
 `);
 });
@@ -142,14 +170,14 @@ test("should remove releases from db", async () => {
     })
   );
 
-  render(<Home />);
+  render(<Home syncCollection={true} />);
 
   expect(await screen.findAllByRole("article")).toHaveLength(1);
   expect(insertMany).toHaveBeenCalledTimes(1);
   expect(deleteMany).toHaveBeenCalledTimes(1);
   expect(handlerCalled.mock.calls.flat()).toMatchInlineSnapshot(`
 Array [
-  "GET: http://localhost/api/albums",
+  "GET: http://localhost/api/albums?syncCollection=true",
   "GET: https://api.discogs.com/users/*",
   "GET: https://api.discogs.com/masters/4126",
 ]
@@ -160,7 +188,7 @@ describe("Error handling", () => {
   test("should show error message if db connection failed", async () => {
     mockedDb.connectToDatabase.mockRejectedValue("Database connection error");
 
-    render(<Home />);
+    render(<Home syncCollection={true} />);
 
     expect(await screen.findByText(errorMessage)).toBeInTheDocument();
   });
@@ -179,14 +207,14 @@ describe("Error handling", () => {
       )
     );
 
-    render(<Home />);
+    render(<Home syncCollection={true} />);
 
     expect(await screen.findByText(errorMessage)).toBeInTheDocument();
     expect(insertMany).toHaveBeenCalledTimes(0);
     expect(deleteMany).toHaveBeenCalledTimes(0);
     expect(handlerCalled.mock.calls.flat()).toMatchInlineSnapshot(`
 Array [
-  "GET: http://localhost/api/albums",
+  "GET: http://localhost/api/albums?syncCollection=true",
   "GET: https://api.discogs.com/users/*",
 ]
 `);
@@ -222,14 +250,14 @@ Array [
       )
     );
 
-    render(<Home />);
+    render(<Home syncCollection={true} />);
 
     expect(await screen.findByText(errorMessage)).toBeInTheDocument();
     expect(insertMany).toHaveBeenCalledTimes(0);
     expect(deleteMany).toHaveBeenCalledTimes(0);
     expect(handlerCalled.mock.calls.flat()).toMatchInlineSnapshot(`
 Array [
-  "GET: http://localhost/api/albums",
+  "GET: http://localhost/api/albums?syncCollection=true",
   "GET: https://api.discogs.com/users/*",
 ]
 `);
@@ -275,14 +303,14 @@ Array [
       )
     );
 
-    render(<Home />);
+    render(<Home syncCollection={true} />);
 
     expect(await screen.findAllByRole("article")).toHaveLength(1);
     expect(insertMany).toHaveBeenCalledTimes(1);
     expect(deleteMany).toHaveBeenCalledTimes(0);
     expect(handlerCalled.mock.calls.flat()).toMatchInlineSnapshot(`
 Array [
-  "GET: http://localhost/api/albums",
+  "GET: http://localhost/api/albums?syncCollection=true",
   "GET: https://api.discogs.com/users/*",
   "GET: https://api.discogs.com/masters/24155",
   "GET: https://api.discogs.com/masters/4126",

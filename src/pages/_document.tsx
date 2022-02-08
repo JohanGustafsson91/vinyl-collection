@@ -42,7 +42,7 @@ class Document extends NextDocument {
 
   render(): React.ReactElement {
     return (
-      <Html>
+      <Html lang="en">
         <Head>
           <link rel="manifest" href="/manifest.json" />
           <link rel="preconnect" href="https://fonts.googleapis.com" />

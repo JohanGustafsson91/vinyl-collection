@@ -7,10 +7,14 @@ import { breakpoint, space } from "theme";
 const loadAlbumComponent = () => import("components/Album/Album");
 const Album = lazy(loadAlbumComponent);
 
+import { GetServerSideProps, InferGetServerSidePropsType } from "next";
+
 import { AlbumLoading } from "components/Album/Album.Loading";
 import { Filter, FilterOptions } from "components/Filter";
 
-const Home = () => {
+const Home = ({
+  syncCollection,
+}: InferGetServerSidePropsType<typeof getServerSideProps>) => {
   const [{ status, data: albums }, setState] = useState<{
     status: "pending" | "resolved" | "rejected";
     data: FormattedAlbum[];
@@ -21,24 +25,27 @@ const Home = () => {
 
   const [filteredAlbums, setFilteredAlbums] = useState(albums);
 
-  useEffect(function fetchAlbums() {
-    fetch("/api/albums")
-      .then((res) => res.json())
-      .then((albums) => {
-        loadAlbumComponent();
+  useEffect(
+    function fetchAlbums() {
+      fetch(`/api/albums?syncCollection=${syncCollection}`)
+        .then((res) => res.json())
+        .then((albums) => {
+          loadAlbumComponent();
 
-        return setState({
-          status: "resolved",
-          data: albums,
-        });
-      })
-      .catch(() =>
-        setState({
-          status: "rejected",
-          data: [],
+          return setState({
+            status: "resolved",
+            data: albums,
+          });
         })
-      );
-  }, []);
+        .catch(() =>
+          setState({
+            status: "rejected",
+            data: [],
+          })
+        );
+    },
+    [syncCollection]
+  );
 
   useEffect(
     function updateFilteredAlbums() {
@@ -116,6 +123,14 @@ const Home = () => {
     </div>
   );
 };
+
+export const getServerSideProps: GetServerSideProps<{
+  syncCollection: boolean;
+}> = async ({ query }) => ({
+  props: {
+    syncCollection: query.syncCollection !== undefined,
+  },
+});
 
 const LoadingAlbumList = () => (
   <AlbumList>

@@ -9,6 +9,7 @@ import {
   useState,
 } from "react";
 import { FormattedAlbum } from "api/albums";
+import Image from "next/image";
 import styled, { css } from "styled-components";
 import { breakpoint, fontSize, space } from "theme";
 
@@ -45,12 +46,15 @@ const Album = ({ album }: Props) => {
       onMouseEnter={loadAlbumDetailsComponent}
       onFocus={loadAlbumDetailsComponent}
     >
-      <Cover
-        src={album.coverImage}
-        alt={`${album.artist} cover image`}
-        width="228"
-        height="228"
-      />
+      <Cover>
+        <Image
+          src={album.coverImage}
+          alt={`${album.artist} cover image`}
+          width={228}
+          height={228}
+          layout="intrinsic"
+        />
+      </Cover>
       <TextContent>
         <Artist>{album.artist}</Artist>
         <Title>
@@ -139,8 +143,9 @@ const Overlay = styled.div`
   background-color: rgba(0, 0, 0, 0.5);
 `;
 
-const Cover = styled.img`
-  width: auto;
+const Cover = styled.div`
+  width: 100px;
+  min-width: 100px;
   height: 100px;
   margin-bottom: ${space(3)};
   transition: all 0.3s ease-in-out 0s;
