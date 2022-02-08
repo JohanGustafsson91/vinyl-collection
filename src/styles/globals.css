@@ -1,16 +1,19 @@
 :root {
-  --color-background: #20202C;
-  --color-text: #ffffff;
+  --color-background: #F2E5D0;
+  --color-content: #F9F3EE;
+  --color-text: #2c1810;
   --color-detail-text: #151419;
-  --color-text-secondary: #605F76;
-  --color-border: #fff;
-  --color-success: #A7E521;
-  --color-info: #03C3EC;
-  --color-alert: #FFD422;
+  --color-text-secondary: #A69C95;
   --color-error: #EF3F26;
+  --color-background-input: #fff;
+  --color-shelf-border: #f5f2eb;
 
-  --zIndex-overlay: 1;
-  --zIndex-popup: 10;
+  --zIndex-shelf-border: 1;
+  --zIndex-shelf: 10;
+  --zIndex-cover: 15;
+  --zIndex-menu: 16;
+  --zIndex-overlay: 20;
+  --zIndex-popup: 30;
 }
 
 html, body {
@@ -18,7 +21,7 @@ html, body {
   color: var(--color-text);
   margin: 0;
   padding: 0;
-  font-family: 'Roboto', sans-serif;
+  font-family: 'Montserrat', sans-serif;
 }
 
 * {

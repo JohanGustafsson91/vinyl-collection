@@ -1,11 +1,14 @@
-const BREAKPOINTS = ["40em", "52em", "64em"];
+const BREAKPOINTS = ["40em", "52em", "64em", "1088px"];
 const FONT_SIZES = [12, 14, 16, 20, 24, 32, 48, 64, 72];
 const SPACES = [0, 4, 8, 16, 32, 64, 128, 256, 512];
 
-export const breakpointSize = (index: 0 | 1 | 2) => BREAKPOINTS[index];
+export const breakpointSize = (index: 0 | 1 | 2 | "max-width") =>
+  BREAKPOINTS[index === "max-width" ? 3 : index];
 
-export const breakpoint = (index: 0 | 1 | 2) =>
-  `@media screen and (min-width: ${BREAKPOINTS[index]})`;
+export const breakpoint = (index: 0 | 1 | 2 | "max-width") =>
+  `@media screen and (min-width: ${
+    BREAKPOINTS[index === "max-width" ? 3 : index]
+  })`;
 
 export const fontSize = (index: SizeArg) => (FONT_SIZES[index] ?? index) + "px";
 

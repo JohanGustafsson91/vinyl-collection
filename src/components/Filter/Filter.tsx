@@ -1,6 +1,6 @@
 import { useEffect, useReducer, useState } from "react";
 import styled from "styled-components";
-import { space } from "theme";
+import { fontSize, space } from "theme";
 
 export const Filter = ({ onFilter, disabled }: Props) => {
   const [filter, setFilter] = useReducer(
@@ -89,7 +89,12 @@ const useDebounced = (query: string, timeout: number) => {
 };
 
 const Input = styled.input`
+  background: var(--color-background-input);
+  padding: ${space(3)};
+  border: 0;
+  border-radius: ${space(3)};
   margin-right: ${space(3)};
+  outline: 0;
 `;
 Input.defaultProps = {
   type: "text",
@@ -97,10 +102,15 @@ Input.defaultProps = {
 
 const Label = styled.label`
   white-space: nowrap;
+  font-weight: 500;
+  font-size: ${fontSize(0)};
+  display: inline-flex;
+  align-items: center;
 `;
 
 const Checkbox = styled.input`
   margin-right: ${space(2)};
+  padding: ${space(2)};
 `;
 Checkbox.defaultProps = {
   type: "checkbox",

@@ -152,15 +152,15 @@ function getFormattedAlbums(raw: RawReleaseWithMasterData[]): FormattedAlbum[] {
           }) ?? [],
       };
     })
+    .sort(function sortByTitle(a, b) {
+      const [titleA, titleB] = [a.title, b.title].map(simplifyArtistName);
+      return titleB.localeCompare(titleA);
+    })
     .sort(function sortByReleaseYear(a, b) {
       return a.releasedYear - b.releasedYear;
     })
     .sort(function sortByArtist(a, b) {
-      const [nameA, nameB] = [a.artist, b.artist].map(
-        function simplifyArtistName(artistName) {
-          return artistName.toUpperCase().replace("THE", "").trim();
-        }
-      );
+      const [nameA, nameB] = [a.artist, b.artist].map(simplifyArtistName);
 
       if (nameA < nameB) {
         return -1;
@@ -172,6 +172,10 @@ function getFormattedAlbums(raw: RawReleaseWithMasterData[]): FormattedAlbum[] {
 
       return 0;
     });
+}
+
+function simplifyArtistName(name: string) {
+  return name.toUpperCase().replace("THE", "").trim();
 }
 
 async function request<T>(url: string, init: RequestInit): Promise<T> {
