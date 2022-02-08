@@ -1,4 +1,5 @@
 import { FormattedAlbum } from "api/albums";
+import Image from "next/image";
 import styled from "styled-components";
 import { breakpoint, fontSize, space } from "theme";
 
@@ -8,8 +9,8 @@ const AlbumDetails = ({ album }: { album: FormattedAlbum }) => (
       <DetailsCover
         src={album.coverImage}
         alt={`${album.artist} cover image`}
-        width="232"
-        height="232"
+        width={232}
+        height={232}
       />
       <DetailsTextContent>
         <DetailsArtist>{album.artist}</DetailsArtist>
@@ -84,8 +85,9 @@ const DetailsHeader = styled.div`
   padding-bottom: ${space(3)};
 `;
 
-const DetailsCover = styled.img`
-  width: auto;
+const DetailsCover = styled(Image)`
+  width: 100px;
+  min-width: 100px;
   height: 100px;
 
   ${breakpoint(1)} {
