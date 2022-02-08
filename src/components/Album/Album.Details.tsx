@@ -6,12 +6,14 @@ import { breakpoint, fontSize, space } from "theme";
 const AlbumDetails = ({ album }: { album: FormattedAlbum }) => (
   <>
     <DetailsHeader>
-      <DetailsCover
-        src={album.coverImage}
-        alt={`${album.artist} cover image`}
-        width={232}
-        height={232}
-      />
+      <DetailsCover>
+        <Image
+          src={album.coverImage}
+          alt={`${album.artist} cover image`}
+          width={232}
+          height={232}
+        />
+      </DetailsCover>
       <DetailsTextContent>
         <DetailsArtist>{album.artist}</DetailsArtist>
         <DetailsSecondaryLabel>{album.title}</DetailsSecondaryLabel>
@@ -85,7 +87,7 @@ const DetailsHeader = styled.div`
   padding-bottom: ${space(3)};
 `;
 
-const DetailsCover = styled(Image)`
+const DetailsCover = styled.div`
   width: 100px;
   min-width: 100px;
   height: 100px;
