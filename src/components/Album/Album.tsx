@@ -11,7 +11,9 @@ import {
 import { FormattedAlbum } from "api/albums";
 import Image from "next/image";
 import styled, { css } from "styled-components";
-import { breakpoint, fontSize, space } from "theme";
+import { breakpoint, space } from "theme";
+
+import { Cover } from "./Album.Cover";
 
 const loadAlbumDetailsComponent = () => import("./Album.Details");
 const AlbumDetails = lazy(loadAlbumDetailsComponent);
@@ -50,17 +52,11 @@ const Album = ({ album }: Props) => {
         <Image
           src={album.coverImage}
           alt={`${album.artist} cover image`}
-          width={228}
-          height={228}
+          width={200}
+          height={200}
           layout="intrinsic"
         />
       </Cover>
-      <TextContent>
-        <Artist>{album.artist}</Artist>
-        <Title>
-          {album.title}, {album.releasedYear}
-        </Title>
-      </TextContent>
 
       <DetailsPage isActive={detailsViewVisible} ref={ref}>
         {detailsViewVisible && (
@@ -143,54 +139,6 @@ const Overlay = styled.div`
   background-color: rgba(0, 0, 0, 0.5);
 `;
 
-const Cover = styled.div`
-  width: 100px;
-  min-width: 100px;
-  height: 100px;
-  margin-bottom: ${space(3)};
-  transition: all 0.3s ease-in-out 0s;
-  border: 2px solid var(--color-border);
-
-  ${breakpoint(1)} {
-    width: 232px;
-    height: 232px;
-  }
-`;
-
 const Container = styled.article`
-  display: flex;
-  flex-direction: row;
-  cursor: pointer;
-
-  &:hover {
-    ${Cover} {
-      transform: scale(1.02) rotateZ(1deg);
-    }
-  }
-
-  ${breakpoint(1)} {
-    flex-direction: column;
-  }
-`;
-
-const Artist = styled.span`
-  font-weight: bold;
-  line-height: 1;
-  margin-bottom: ${space(2)};
-`;
-
-const Title = styled.span`
-  font-size: ${fontSize(1)};
-  color: var(--color-text-secondary);
-  line-height: 1;
-`;
-
-const TextContent = styled.div`
-  padding: 0 ${space(3)};
-  display: flex;
-  flex-direction: column;
-
-  ${breakpoint(1)} {
-    padding: 0;
-  }
+  outline: 0;
 `;
