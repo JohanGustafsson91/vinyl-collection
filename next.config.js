@@ -1,9 +1,30 @@
 /** @type {import('next').NextConfig} */
-module.exports = {
+const nextConfig = {
+  reactStrictMode: true,
+  swcMinify: true,
   compiler: {
     styledComponents: true,
   },
   images: {
-    domains: ["img.discogs.com", "i.discogs.com"],
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "img.discogs.com",
+      },
+      {
+        protocol: "https",
+        hostname: "i.discogs.com",
+      },
+      {
+        protocol: "http",
+        hostname: "img.discogs.com",
+      },
+      {
+        protocol: "http",
+        hostname: "i.discogs.com",
+      },
+    ],
   },
 };
+
+module.exports = nextConfig;

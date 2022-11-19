@@ -18,7 +18,6 @@ class Document extends NextDocument {
     try {
       ctx.renderPage = function renderPage() {
         return originalRenderPage({
-          // eslint-disable-next-line @getify/proper-arrows/name
           enhanceApp: (App) => (props) =>
             sheet.collectStyles(<App {...props} />),
         });
