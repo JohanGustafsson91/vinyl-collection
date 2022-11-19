@@ -1,13 +1,9 @@
-const withPWA = require("next-pwa");
-
-module.exports = withPWA({
-  pwa: {
-    dest: "public",
-    register: true,
-    skipWaiting: true,
+/** @type {import('next').NextConfig} */
+module.exports = {
+  compiler: {
+    styledComponents: true,
   },
-  reactStrictMode: false,
   images: {
     domains: ["img.discogs.com", "i.discogs.com"],
   },
-});
+};
