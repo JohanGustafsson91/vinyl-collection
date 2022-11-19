@@ -1,5 +1,3 @@
-/* eslint-disable @getify/proper-arrows/name */
-
 import * as db from "db/db.connect";
 jest.mock("db/db.connect");
 const mockedDb = db as jest.Mocked<typeof db>;
