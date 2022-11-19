@@ -2,6 +2,11 @@
   "name": "nextjs",
   "version": "1.0.0",
   "private": true,
+  "engines": {
+    "node": "16.18.0",
+    "npm": "8.19.2"
+  },
+  "engineStrict": true,
   "scripts": {
     "dev": "next dev",
     "build": "npm run test && next build",
