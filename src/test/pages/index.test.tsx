@@ -68,7 +68,7 @@ test("should not insert new releases in db if up to date", async () => {
   expect(deleteMany).toHaveBeenCalledTimes(0);
 
   expect(handlerCalled.mock.calls.flat()).toMatchInlineSnapshot(`
-Array [
+[
   "GET: http://localhost/api/albums?syncCollection=true",
   "GET: https://api.discogs.com/users/*",
 ]
@@ -106,7 +106,7 @@ test("should insert new releases in db", async () => {
   expect(insertMany).toHaveBeenCalledTimes(1);
   expect(deleteMany).toHaveBeenCalledTimes(0);
   expect(handlerCalled.mock.calls.flat()).toMatchInlineSnapshot(`
-Array [
+[
   "GET: http://localhost/api/albums?syncCollection=true",
   "GET: https://api.discogs.com/users/*",
   "GET: https://api.discogs.com/masters/24155",
@@ -136,7 +136,7 @@ test("should fetch albums from database if no sync specified", async () => {
   expect(insertMany).toHaveBeenCalledTimes(0);
   expect(deleteMany).toHaveBeenCalledTimes(0);
   expect(handlerCalled.mock.calls.flat()).toMatchInlineSnapshot(`
-Array [
+[
   "GET: http://localhost/api/albums?syncCollection=false",
 ]
 `);
@@ -175,7 +175,7 @@ test("should remove releases from db", async () => {
   expect(insertMany).toHaveBeenCalledTimes(1);
   expect(deleteMany).toHaveBeenCalledTimes(1);
   expect(handlerCalled.mock.calls.flat()).toMatchInlineSnapshot(`
-Array [
+[
   "GET: http://localhost/api/albums?syncCollection=true",
   "GET: https://api.discogs.com/users/*",
   "GET: https://api.discogs.com/masters/4126",
@@ -212,7 +212,7 @@ describe("Error handling", () => {
     expect(insertMany).toHaveBeenCalledTimes(0);
     expect(deleteMany).toHaveBeenCalledTimes(0);
     expect(handlerCalled.mock.calls.flat()).toMatchInlineSnapshot(`
-Array [
+[
   "GET: http://localhost/api/albums?syncCollection=true",
   "GET: https://api.discogs.com/users/*",
 ]
@@ -255,7 +255,7 @@ Array [
     expect(insertMany).toHaveBeenCalledTimes(0);
     expect(deleteMany).toHaveBeenCalledTimes(0);
     expect(handlerCalled.mock.calls.flat()).toMatchInlineSnapshot(`
-Array [
+[
   "GET: http://localhost/api/albums?syncCollection=true",
   "GET: https://api.discogs.com/users/*",
 ]
@@ -308,7 +308,7 @@ Array [
     expect(insertMany).toHaveBeenCalledTimes(1);
     expect(deleteMany).toHaveBeenCalledTimes(0);
     expect(handlerCalled.mock.calls.flat()).toMatchInlineSnapshot(`
-Array [
+[
   "GET: http://localhost/api/albums?syncCollection=true",
   "GET: https://api.discogs.com/users/*",
   "GET: https://api.discogs.com/masters/24155",

@@ -54,7 +54,6 @@ const Album = ({ album }: Props) => {
           alt={`${album.artist} cover image`}
           width={200}
           height={200}
-          layout="intrinsic"
         />
       </Cover>
 
