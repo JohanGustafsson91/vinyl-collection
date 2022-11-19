@@ -43,8 +43,6 @@ class Document extends NextDocument {
     return (
       <Html lang="en">
         <Head>
-          <link rel="manifest" href="/manifest.json" />
-
           <link rel="preconnect" href="https://fonts.googleapis.com" />
           <link
             rel="preconnect"
