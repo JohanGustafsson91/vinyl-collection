@@ -3,7 +3,7 @@ import { Db } from "mongodb";
 
 import { catchChainedError, logger, throwChainedError } from "utils";
 
-import {
+import type {
   FormattedAlbum,
   Raw,
   RawMasterData,
@@ -24,19 +24,19 @@ export async function getAlbums() {
   ]).catch(throwChainedError("Could not get albums from database or api"));
 
   const albumsToSaveInDatabaseWithoutMasterData = fetchedAlbums.filter(
-    (album) => !storedAlbums.find(propEq("id")(album.id))
+    (album) => !storedAlbums.find(({ id }) => id === album.id)
   );
 
   const albumsToInsertInDatabase = (
     await Promise.all(
       albumsToSaveInDatabaseWithoutMasterData.map(fetchMasterDataForAlbum)
     )
-  ).filter(Boolean);
+  ).filter(Boolean) as RawReleaseWithMasterData[];
 
   const albumIdsToRemoveFromDatabase = storedAlbums.reduce((prev, album) => {
-    const found = fetchedAlbums.find(propEq("id")(album.id));
+    const found = fetchedAlbums.find(({ id }) => id === album.id);
     return [...prev, ...(found ? [] : [album.id])];
-  }, []);
+  }, [] as number[]);
 
   logger.info("albumsToInsertInDatabase", albumsToInsertInDatabase);
   logger.info("albumIdsToRemoveFromDatabase", albumIdsToRemoveFromDatabase);
@@ -54,7 +54,7 @@ export async function getAlbums() {
 
   const payload = [
     ...storedAlbums.filter(function notRemovedAlbum({ id }) {
-      return !albumIdsToRemoveFromDatabase.find(equals(id));
+      return !albumIdsToRemoveFromDatabase.find((removeId) => removeId === id);
     }),
     ...albumsToInsertInDatabase,
   ];
@@ -87,9 +87,12 @@ async function getStoredAlbumsFromDb(db: Db) {
 }
 
 async function fetchAlbums() {
-  const response = await request<Raw>(process.env.DISCOGS_ENDPOINT_RELEASES, {
-    headers: getHeaders(),
-  }).catch(throwChainedError("Could not fetch releases from discogs"));
+  const response = await request<Raw>(
+    process.env.DISCOGS_ENDPOINT_RELEASES ?? "",
+    {
+      headers: getHeaders(),
+    }
+  ).catch(throwChainedError("Could not fetch releases from discogs"));
 
   return response.releases;
 }
@@ -97,6 +100,13 @@ async function fetchAlbums() {
 async function fetchMasterDataForAlbum(
   album: Omit<RawRelease, "masterData">
 ): Promise<RawReleaseWithMasterData | undefined> {
+  if (!album.basic_information.master_url) {
+    return {
+      ...album,
+      masterData: undefined,
+    };
+  }
+
   const response = await request<RawMasterData>(
     album.basic_information.master_url,
     {
@@ -127,7 +137,7 @@ function getFormattedAlbums(raw: RawReleaseWithMasterData[]): FormattedAlbum[] {
         artist: basic_information.artists[0].name,
         title: basic_information.title,
         printedYear: basic_information.year,
-        releasedYear: masterData.year,
+        releasedYear: masterData?.year,
         thumbnail: basic_information.thumb,
         coverImage: basic_information.cover_image,
         format: basic_information.formats[0].name,
@@ -157,7 +167,7 @@ function getFormattedAlbums(raw: RawReleaseWithMasterData[]): FormattedAlbum[] {
       return titleB.localeCompare(titleA);
     })
     .sort(function sortByReleaseYear(a, b) {
-      return a.releasedYear - b.releasedYear;
+      return (a.releasedYear || 0) - (b.releasedYear || 0);
     })
     .sort(function sortByArtist(a, b) {
       const [nameA, nameB] = [a.artist, b.artist].map(simplifyArtistName);
@@ -205,7 +215,7 @@ async function request<T>(url: string, init: RequestInit): Promise<T> {
 function getHeaders(): Headers | never {
   const { DISCOGS_TOKEN, DISCOGS_USER_AGENT } = process.env;
 
-  if (![DISCOGS_TOKEN, DISCOGS_USER_AGENT].every(Boolean)) {
+  if (!DISCOGS_TOKEN || !DISCOGS_USER_AGENT) {
     throw new Error("Missing discogs environment variables");
   }
 
@@ -216,8 +226,3 @@ function getHeaders(): Headers | never {
     Authorization: DISCOGS_TOKEN,
   });
 }
-
-const propEq = (prop: string) => (value: unknown) => (obj: any) =>
-  value === obj[prop];
-
-const equals = (first: unknown) => (second: unknown) => first === second;

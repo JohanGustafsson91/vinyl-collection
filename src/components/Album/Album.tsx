@@ -18,11 +18,11 @@ import { Cover } from "./Album.Cover";
 const loadAlbumDetailsComponent = () => import("./Album.Details");
 const AlbumDetails = lazy(loadAlbumDetailsComponent);
 
-const Album = ({ album }: Props) => {
+export default function Album({ album }: Props) {
   const [detailsViewVisible, setIsDetailViewVisible] = useState(false);
-  const ref = useRef<HTMLDivElement | null>(null);
+  const refDetailsPage = useRef<HTMLDivElement | null>(null);
 
-  useOnClickOutside(ref, function handleClickOutside(e) {
+  useOnClickOutside(refDetailsPage, function handleClickOutside(e) {
     if (detailsViewVisible) {
       e.preventDefault();
       e.stopPropagation();
@@ -58,7 +58,7 @@ const Album = ({ album }: Props) => {
         />
       </Cover>
 
-      <DetailsPage isActive={detailsViewVisible} ref={ref}>
+      <DetailsPage isActive={detailsViewVisible} ref={refDetailsPage}>
         {detailsViewVisible && (
           <Suspense fallback={<div>Loading...</div>}>
             <AlbumDetails album={album} />
@@ -68,16 +68,10 @@ const Album = ({ album }: Props) => {
       {detailsViewVisible && <Overlay />}
     </Container>
   );
-};
-
-export default Album;
-
-interface Props {
-  album: FormattedAlbum;
 }
 
 function useOnClickOutside(
-  ref: MutableRefObject<HTMLDivElement>,
+  ref: MutableRefObject<HTMLDivElement | null>,
   handler: (e: MouseEvent | TouchEvent) => void
 ) {
   useEffect(
@@ -114,19 +108,16 @@ const DetailsPage = styled.div<{ isActive: boolean }>`
   z-index: var(--zIndex-popup);
   visibility: hidden;
 
-  ${function applyActiveStyle({ isActive }) {
-    return (
-      isActive &&
-      css`
-        visibility: visible;
-        left: calc(100% / 6);
+  ${({ isActive }) =>
+    isActive &&
+    css`
+      visibility: visible;
+      left: calc(100% / 6);
 
-        ${breakpoint(1)} {
-          left: 50%;
-        }
-      `
-    );
-  }}
+      ${breakpoint(1)} {
+        left: 50%;
+      }
+    `}
 `;
 
 const Overlay = styled.div`
@@ -142,3 +133,7 @@ const Overlay = styled.div`
 const Container = styled.article`
   outline: 0;
 `;
+
+interface Props {
+  album: FormattedAlbum;
+}

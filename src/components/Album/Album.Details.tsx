@@ -1,86 +1,98 @@
-import { FormattedAlbum } from "api/albums";
+import type { FormattedAlbum } from "api/albums";
 import Image from "next/image";
 import styled from "styled-components";
 import { breakpoint, fontSize, space } from "theme";
 
-const AlbumDetails = ({ album }: { album: FormattedAlbum }) => (
-  <>
-    <DetailsHeader>
-      <DetailsCover>
-        <Image
-          src={album.coverImage}
-          alt={`${album.artist} cover image`}
-          width={232}
-          height={232}
-          style={{ width: "100%", height: "auto" }}
-        />
-      </DetailsCover>
-      <DetailsTextContent>
-        <DetailsArtist>{album.artist}</DetailsArtist>
-        <DetailsSecondaryLabel>{album.title}</DetailsSecondaryLabel>
-      </DetailsTextContent>
-    </DetailsHeader>
+export default function AlbumDetails({ album }: { album: FormattedAlbum }) {
+  return (
+    <>
+      <DetailsHeader>
+        <DetailsCover>
+          <Image
+            src={album.coverImage}
+            alt={`${album.artist} cover image`}
+            width={232}
+            height={232}
+            style={{ width: "100%", height: "auto" }}
+          />
+        </DetailsCover>
+        <DetailsTextContent>
+          <DetailsArtist>{album.artist}</DetailsArtist>
+          <DetailsSecondaryLabel>{album.title}</DetailsSecondaryLabel>
+        </DetailsTextContent>
+      </DetailsHeader>
 
-    <DetailsGrid>
-      <div>
-        <DetailsLabel>Release</DetailsLabel>
-        <DetailsSecondaryLabel>{album.releasedYear}</DetailsSecondaryLabel>
-      </div>
-      <div>
-        <DetailsLabel>Label</DetailsLabel>
-        <DetailsSecondaryLabel>
-          {album.label}, {album.labelCategoryNumber}
-        </DetailsSecondaryLabel>
-      </div>
-      <div>
-        <DetailsLabel>Printed</DetailsLabel>
-        <DetailsSecondaryLabel>{album.printedYear}</DetailsSecondaryLabel>
-      </div>
-      <div>
-        <DetailsLabel>Format</DetailsLabel>
-        <DetailsSecondaryLabel>{album.format}</DetailsSecondaryLabel>
-      </div>
-      <div>
-        <DetailsLabel>Genre</DetailsLabel>
-        {album.genres.map(function renderGenre(genre) {
-          return (
-            <DetailsSecondaryLabel key={genre}>{genre}</DetailsSecondaryLabel>
-          );
-        })}
-      </div>
-    </DetailsGrid>
-
-    <DetailsGrid>
-      <div>
-        <DetailsLabel>Tracklist</DetailsLabel>
-
-        <DetailsTrackList>
-          {album.tracks.map(function renderTrack(track) {
-            return <DetailsTrack key={track.title}>{track.title}</DetailsTrack>;
-          })}
-        </DetailsTrackList>
-      </div>
-
-      <div>
-        <DetailsLabel>Videos</DetailsLabel>
-
-        <DetailsTrackList>
-          {album.videos.map(function renderLinkToVideo(video) {
+      <DetailsGrid>
+        <div>
+          <DetailsLabel>Release</DetailsLabel>
+          <DetailsSecondaryLabel>
+            {album.releasedYear || "Unknown"}
+          </DetailsSecondaryLabel>
+        </div>
+        <div>
+          <DetailsLabel>Label</DetailsLabel>
+          <DetailsSecondaryLabel>
+            {album.label}, {album.labelCategoryNumber}
+          </DetailsSecondaryLabel>
+        </div>
+        <div>
+          <DetailsLabel>Printed</DetailsLabel>
+          <DetailsSecondaryLabel>{album.printedYear}</DetailsSecondaryLabel>
+        </div>
+        <div>
+          <DetailsLabel>Format</DetailsLabel>
+          <DetailsSecondaryLabel>{album.format}</DetailsSecondaryLabel>
+        </div>
+        <div>
+          <DetailsLabel>Genre</DetailsLabel>
+          {album.genres.map(function renderGenre(genre) {
             return (
-              <DetailsTrack key={video.title + video.url}>
-                <a href={video.url} target="_blank" rel="noreferrer">
-                  {video.title}
-                </a>
-              </DetailsTrack>
+              <DetailsSecondaryLabel key={genre}>{genre}</DetailsSecondaryLabel>
             );
           })}
-        </DetailsTrackList>
-      </div>
-    </DetailsGrid>
-  </>
-);
+        </div>
+      </DetailsGrid>
 
-export default AlbumDetails;
+      <DetailsGrid>
+        <div>
+          <DetailsLabel>Tracklist</DetailsLabel>
+
+          {album.tracks.length ? (
+            <DetailsTrackList>
+              {album.tracks.map(function renderTrack(track) {
+                return (
+                  <DetailsTrack key={track.title}>{track.title}</DetailsTrack>
+                );
+              })}
+            </DetailsTrackList>
+          ) : (
+            <DetailsSecondaryLabel>Not defined</DetailsSecondaryLabel>
+          )}
+        </div>
+
+        <div>
+          <DetailsLabel>Videos</DetailsLabel>
+
+          {album.videos.length ? (
+            <DetailsTrackList>
+              {album.videos.map(function renderLinkToVideo(video) {
+                return (
+                  <DetailsTrack key={video.title + video.url}>
+                    <a href={video.url} target="_blank" rel="noreferrer">
+                      {video.title}
+                    </a>
+                  </DetailsTrack>
+                );
+              })}
+            </DetailsTrackList>
+          ) : (
+            <DetailsSecondaryLabel>Not defined</DetailsSecondaryLabel>
+          )}
+        </div>
+      </DetailsGrid>
+    </>
+  );
+}
 
 const DetailsHeader = styled.div`
   display: flex;

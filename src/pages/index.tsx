@@ -17,9 +17,9 @@ const Album = lazy(loadAlbumComponent);
 import { Cover } from "components/Album/Album.Cover";
 import { Filter, FilterOptions } from "components/Filter";
 
-const Home = ({
+export default function Home({
   syncCollection,
-}: InferGetServerSidePropsType<typeof getServerSideProps>) => {
+}: InferGetServerSidePropsType<typeof getServerSideProps>) {
   const [{ status, data: albums }, setState] = useState<{
     status: "pending" | "resolved" | "rejected";
     data: FormattedAlbum[];
@@ -93,9 +93,9 @@ const Home = ({
   const numberOfAlbumsOnOneShelf =
     width < Number.parseInt(breakpointSize("max-width")) ? 2 : 4;
 
-  const shelves = spliceIntoChunks(albums, numberOfAlbumsOnOneShelf);
+  const shelves = spliceArrayIntoChunks(albums, numberOfAlbumsOnOneShelf);
 
-  const filteredAlbumsInChunks = spliceIntoChunks(
+  const filteredAlbumsInChunks = spliceArrayIntoChunks(
     filteredAlbums,
     numberOfAlbumsOnOneShelf
   );
@@ -120,45 +120,53 @@ const Home = ({
 
       <Content>
         <Container>
-          {status === "pending" && <LoadingAlbums shelves={5} />}
-
-          {status === "resolved" &&
-            shelves.map((_, i) => {
-              const albumsOnShelf = filteredAlbumsInChunks?.[i] ?? [];
-
-              return (
-                <AlbumShelf key={`shelf${i}`}>
-                  {albumsOnShelf?.length > 0 ? (
-                    albumsOnShelf.map((album, i) => (
-                      <Fragment key={album.id}>
-                        <Suspense fallback={<Cover invisible />}>
-                          <Album album={album} />
-                        </Suspense>
-                        {i + 1 === albumsOnShelf.length && <Shelf />}
-                      </Fragment>
-                    ))
-                  ) : (
-                    <Fragment key={i}>
+          {
+            {
+              pending: spliceArrayIntoChunks(new Array(5).fill(null), 1).map(
+                (_, i) => (
+                  <AlbumShelf key={`shelf${i}`}>
+                    <Fragment>
                       <Cover invisible />
                       <Shelf />
                     </Fragment>
-                  )}
-                </AlbumShelf>
-              );
-            })}
+                  </AlbumShelf>
+                )
+              ),
+              resolved: shelves.map((_, i) => {
+                const albumsOnShelf = filteredAlbumsInChunks?.[i] ?? [];
 
-          {status === "rejected" && (
-            <ErrorMessage>
-              Something went wrong when fetching albums
-            </ErrorMessage>
-          )}
+                return (
+                  <AlbumShelf key={`shelf${i}`}>
+                    {albumsOnShelf?.length > 0 ? (
+                      albumsOnShelf.map((album, i) => (
+                        <Fragment key={album.id}>
+                          <Suspense fallback={<Cover invisible />}>
+                            <Album album={album} />
+                          </Suspense>
+                          {i + 1 === albumsOnShelf.length && <Shelf />}
+                        </Fragment>
+                      ))
+                    ) : (
+                      <Fragment key={i}>
+                        <Cover invisible />
+                        <Shelf />
+                      </Fragment>
+                    )}
+                  </AlbumShelf>
+                );
+              }),
+              rejected: (
+                <ErrorMessage>
+                  Something went wrong when fetching albums
+                </ErrorMessage>
+              ),
+            }[status]
+          }
         </Container>
       </Content>
     </Page>
   );
-};
-
-export default Home;
+}
 
 export const getServerSideProps: GetServerSideProps<{
   syncCollection: boolean;
@@ -168,23 +176,14 @@ export const getServerSideProps: GetServerSideProps<{
   },
 });
 
-const LoadingAlbums = ({ shelves }: { shelves: number }) => (
-  <>
-    {spliceIntoChunks(new Array(shelves).fill(null), 1).map((_, i) => (
-      <AlbumShelf key={`shelf${i}`}>
-        <Fragment>
-          <Cover invisible />
-          <Shelf />
-        </Fragment>
-      </AlbumShelf>
-    ))}
-  </>
-);
-
-const spliceIntoChunks = <T,>(arr: Array<T>, size: number): Array<Array<T>> =>
-  Array.from({ length: Math.ceil(arr.length / size) }, (_, i) =>
+function spliceArrayIntoChunks<T>(
+  arr: Array<T>,
+  size: number
+): Array<Array<T>> {
+  return Array.from({ length: Math.ceil(arr.length / size) }, (_, i) =>
     arr.slice(i * size, i * size + size)
   );
+}
 
 function useWindowSize() {
   const isSSR = !globalThis.window;

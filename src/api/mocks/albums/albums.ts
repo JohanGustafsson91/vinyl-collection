@@ -16,7 +16,7 @@ export const getReleases = () =>
       });
 
       albums.forEach(function cleanMasterData(album) {
-        // Master data is not included in real response
+        // @ts-expect-error Master data is not included in real response
         delete album["masterData"];
       });
 

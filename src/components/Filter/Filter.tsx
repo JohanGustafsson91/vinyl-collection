@@ -2,7 +2,7 @@ import { useEffect, useReducer, useState } from "react";
 import styled from "styled-components";
 import { fontSize, space } from "theme";
 
-export const Filter = ({ onFilter, disabled }: Props) => {
+export function Filter({ onFilter, disabled }: Props) {
   const [filter, setFilter] = useReducer(
     (prevState: FilterOptions, newPartialState: Partial<FilterOptions>) => ({
       ...prevState,
@@ -57,17 +57,7 @@ export const Filter = ({ onFilter, disabled }: Props) => {
       </Label>
     </div>
   );
-};
-
-interface Props {
-  onFilter: (arg: FilterOptions) => void;
-  disabled: boolean;
 }
-
-export type FilterOptions = {
-  query: string;
-  includeTrack: boolean;
-};
 
 const useDebounced = (query: string, timeout: number) => {
   const [value, setValue] = useState(query);
@@ -114,4 +104,14 @@ const Checkbox = styled.input`
 `;
 Checkbox.defaultProps = {
   type: "checkbox",
+};
+
+interface Props {
+  onFilter: (arg: FilterOptions) => void;
+  disabled: boolean;
+}
+
+export type FilterOptions = {
+  query: string;
+  includeTrack: boolean;
 };
