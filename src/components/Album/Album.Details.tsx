@@ -13,7 +13,7 @@ export default function AlbumDetails({ album }: { album: FormattedAlbum }) {
             alt={`${album.artist} cover image`}
             width={232}
             height={232}
-            style={{ width: "100%", height: "auto" }}
+            style={{ width: "100%", height: "100%" }}
           />
         </DetailsCover>
         <DetailsTextContent>
