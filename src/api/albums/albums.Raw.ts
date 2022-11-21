@@ -27,7 +27,7 @@ interface RawArtist {
 interface RawBasicInformation {
   id: number;
   master_id: number;
-  master_url: string;
+  master_url: string | null;
   resource_url: string;
   thumb: string;
   cover_image: string;
@@ -119,9 +119,9 @@ export interface RawRelease {
   folder_id: number;
 }
 
-export type RawReleaseWithMasterData = RawRelease & {
-  masterData: RawMasterData;
-};
+export interface RawReleaseWithMasterData extends RawRelease {
+  masterData: RawMasterData | undefined;
+}
 
 export interface Raw {
   releases: RawRelease[];
