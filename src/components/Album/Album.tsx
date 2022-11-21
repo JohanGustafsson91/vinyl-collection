@@ -49,7 +49,7 @@ export default function Album({ album }: Props) {
       onFocus={loadAlbumDetailsComponent}
     >
       <Cover>
-        <img
+        <Image
           src={album.coverImage}
           alt={`${album.artist} cover image`}
           style={{ width: "100%", height: "auto" }}
@@ -71,7 +71,7 @@ export default function Album({ album }: Props) {
 }
 
 function useOnClickOutside(
-  ref: MutableRefObject<HTMLDivElement>,
+  ref: MutableRefObject<HTMLDivElement | null>,
   handler: (e: MouseEvent | TouchEvent) => void
 ) {
   useEffect(

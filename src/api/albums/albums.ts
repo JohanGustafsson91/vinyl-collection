@@ -31,12 +31,12 @@ export async function getAlbums() {
     await Promise.all(
       albumsToSaveInDatabaseWithoutMasterData.map(fetchMasterDataForAlbum)
     )
-  ).filter(Boolean);
+  ).filter(Boolean) as RawReleaseWithMasterData[];
 
   const albumIdsToRemoveFromDatabase = storedAlbums.reduce((prev, album) => {
     const found = fetchedAlbums.find(({ id }) => id === album.id);
     return [...prev, ...(found ? [] : [album.id])];
-  }, []);
+  }, [] as number[]);
 
   logger.info("albumsToInsertInDatabase", albumsToInsertInDatabase);
   logger.info("albumIdsToRemoveFromDatabase", albumIdsToRemoveFromDatabase);
@@ -87,9 +87,12 @@ async function getStoredAlbumsFromDb(db: Db) {
 }
 
 async function fetchAlbums() {
-  const response = await request<Raw>(process.env.DISCOGS_ENDPOINT_RELEASES, {
-    headers: getHeaders(),
-  }).catch(throwChainedError("Could not fetch releases from discogs"));
+  const response = await request<Raw>(
+    process.env.DISCOGS_ENDPOINT_RELEASES ?? "",
+    {
+      headers: getHeaders(),
+    }
+  ).catch(throwChainedError("Could not fetch releases from discogs"));
 
   return response.releases;
 }
@@ -164,7 +167,7 @@ function getFormattedAlbums(raw: RawReleaseWithMasterData[]): FormattedAlbum[] {
       return titleB.localeCompare(titleA);
     })
     .sort(function sortByReleaseYear(a, b) {
-      return a.releasedYear - b.releasedYear;
+      return (a.releasedYear || 0) - (b.releasedYear || 0);
     })
     .sort(function sortByArtist(a, b) {
       const [nameA, nameB] = [a.artist, b.artist].map(simplifyArtistName);
@@ -212,7 +215,7 @@ async function request<T>(url: string, init: RequestInit): Promise<T> {
 function getHeaders(): Headers | never {
   const { DISCOGS_TOKEN, DISCOGS_USER_AGENT } = process.env;
 
-  if (![DISCOGS_TOKEN, DISCOGS_USER_AGENT].every(Boolean)) {
+  if (!DISCOGS_TOKEN || !DISCOGS_USER_AGENT) {
     throw new Error("Missing discogs environment variables");
   }
 

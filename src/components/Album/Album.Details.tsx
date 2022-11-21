@@ -8,7 +8,7 @@ export default function AlbumDetails({ album }: { album: FormattedAlbum }) {
     <>
       <DetailsHeader>
         <DetailsCover>
-          <img
+          <Image
             src={album.coverImage}
             alt={`${album.artist} cover image`}
             width={232}
