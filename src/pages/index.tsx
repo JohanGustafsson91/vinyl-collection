@@ -93,9 +93,9 @@ export default function Home({
   const numberOfAlbumsOnOneShelf =
     width < Number.parseInt(breakpointSize("max-width")) ? 2 : 4;
 
-  const shelves = spliceIntoChunks(albums, numberOfAlbumsOnOneShelf);
+  const shelves = spliceArrayIntoChunks(albums, numberOfAlbumsOnOneShelf);
 
-  const filteredAlbumsInChunks = spliceIntoChunks(
+  const filteredAlbumsInChunks = spliceArrayIntoChunks(
     filteredAlbums,
     numberOfAlbumsOnOneShelf
   );
@@ -122,11 +122,15 @@ export default function Home({
         <Container>
           {
             {
-              pending: <LoadingAlbums shelves={5} />,
-              rejected: (
-                <ErrorMessage>
-                  Something went wrong when fetching albums
-                </ErrorMessage>
+              pending: spliceArrayIntoChunks(new Array(5).fill(null), 1).map(
+                (_, i) => (
+                  <AlbumShelf key={`shelf${i}`}>
+                    <Fragment>
+                      <Cover invisible />
+                      <Shelf />
+                    </Fragment>
+                  </AlbumShelf>
+                )
               ),
               resolved: shelves.map((_, i) => {
                 const albumsOnShelf = filteredAlbumsInChunks?.[i] ?? [];
@@ -151,6 +155,11 @@ export default function Home({
                   </AlbumShelf>
                 );
               }),
+              rejected: (
+                <ErrorMessage>
+                  Something went wrong when fetching albums
+                </ErrorMessage>
+              ),
             }[status]
           }
         </Container>
@@ -167,23 +176,14 @@ export const getServerSideProps: GetServerSideProps<{
   },
 });
 
-const LoadingAlbums = ({ shelves }: { shelves: number }) => (
-  <>
-    {spliceIntoChunks(new Array(shelves).fill(null), 1).map((_, i) => (
-      <AlbumShelf key={`shelf${i}`}>
-        <Fragment>
-          <Cover invisible />
-          <Shelf />
-        </Fragment>
-      </AlbumShelf>
-    ))}
-  </>
-);
-
-const spliceIntoChunks = <T,>(arr: Array<T>, size: number): Array<Array<T>> =>
-  Array.from({ length: Math.ceil(arr.length / size) }, (_, i) =>
+function spliceArrayIntoChunks<T>(
+  arr: Array<T>,
+  size: number
+): Array<Array<T>> {
+  return Array.from({ length: Math.ceil(arr.length / size) }, (_, i) =>
     arr.slice(i * size, i * size + size)
   );
+}
 
 function useWindowSize() {
   const isSSR = !globalThis.window;
