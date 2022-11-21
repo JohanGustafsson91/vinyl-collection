@@ -49,7 +49,7 @@ export default function Album({ album }: Props) {
       onFocus={loadAlbumDetailsComponent}
     >
       <Cover>
-        <Image
+        <img
           src={album.coverImage}
           alt={`${album.artist} cover image`}
           style={{ width: "100%", height: "auto" }}

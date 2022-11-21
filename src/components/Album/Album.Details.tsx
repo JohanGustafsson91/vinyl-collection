@@ -1,4 +1,4 @@
-import { FormattedAlbum } from "api/albums";
+import type { FormattedAlbum } from "api/albums";
 import Image from "next/image";
 import styled from "styled-components";
 import { breakpoint, fontSize, space } from "theme";
@@ -8,7 +8,7 @@ export default function AlbumDetails({ album }: { album: FormattedAlbum }) {
     <>
       <DetailsHeader>
         <DetailsCover>
-          <Image
+          <img
             src={album.coverImage}
             alt={`${album.artist} cover image`}
             width={232}
@@ -25,7 +25,9 @@ export default function AlbumDetails({ album }: { album: FormattedAlbum }) {
       <DetailsGrid>
         <div>
           <DetailsLabel>Release</DetailsLabel>
-          <DetailsSecondaryLabel>{album.releasedYear}</DetailsSecondaryLabel>
+          <DetailsSecondaryLabel>
+            {album.releasedYear || "Unknown"}
+          </DetailsSecondaryLabel>
         </div>
         <div>
           <DetailsLabel>Label</DetailsLabel>
@@ -55,29 +57,37 @@ export default function AlbumDetails({ album }: { album: FormattedAlbum }) {
         <div>
           <DetailsLabel>Tracklist</DetailsLabel>
 
-          <DetailsTrackList>
-            {album.tracks.map(function renderTrack(track) {
-              return (
-                <DetailsTrack key={track.title}>{track.title}</DetailsTrack>
-              );
-            })}
-          </DetailsTrackList>
+          {album.tracks.length ? (
+            <DetailsTrackList>
+              {album.tracks.map(function renderTrack(track) {
+                return (
+                  <DetailsTrack key={track.title}>{track.title}</DetailsTrack>
+                );
+              })}
+            </DetailsTrackList>
+          ) : (
+            <DetailsSecondaryLabel>Not defined</DetailsSecondaryLabel>
+          )}
         </div>
 
         <div>
           <DetailsLabel>Videos</DetailsLabel>
 
-          <DetailsTrackList>
-            {album.videos.map(function renderLinkToVideo(video) {
-              return (
-                <DetailsTrack key={video.title + video.url}>
-                  <a href={video.url} target="_blank" rel="noreferrer">
-                    {video.title}
-                  </a>
-                </DetailsTrack>
-              );
-            })}
-          </DetailsTrackList>
+          {album.videos.length ? (
+            <DetailsTrackList>
+              {album.videos.map(function renderLinkToVideo(video) {
+                return (
+                  <DetailsTrack key={video.title + video.url}>
+                    <a href={video.url} target="_blank" rel="noreferrer">
+                      {video.title}
+                    </a>
+                  </DetailsTrack>
+                );
+              })}
+            </DetailsTrackList>
+          ) : (
+            <DetailsSecondaryLabel>Not defined</DetailsSecondaryLabel>
+          )}
         </div>
       </DetailsGrid>
     </>
