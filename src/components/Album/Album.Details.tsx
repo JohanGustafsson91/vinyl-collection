@@ -12,6 +12,7 @@ const AlbumDetails = ({ album }: { album: FormattedAlbum }) => (
           alt={`${album.artist} cover image`}
           width={232}
           height={232}
+          style={{ width: "100%", height: "auto" }}
         />
       </DetailsCover>
       <DetailsTextContent>
@@ -88,6 +89,7 @@ const DetailsHeader = styled.div`
 `;
 
 const DetailsCover = styled.div`
+  position: relative;
   width: 100px;
   min-width: 100px;
   height: 100px;

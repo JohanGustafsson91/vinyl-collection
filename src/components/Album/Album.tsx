@@ -52,6 +52,7 @@ const Album = ({ album }: Props) => {
         <Image
           src={album.coverImage}
           alt={`${album.artist} cover image`}
+          style={{ width: "100%", height: "auto" }}
           width={200}
           height={200}
         />
