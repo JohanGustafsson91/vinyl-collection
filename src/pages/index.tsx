@@ -17,9 +17,9 @@ const Album = lazy(loadAlbumComponent);
 import { Cover } from "components/Album/Album.Cover";
 import { Filter, FilterOptions } from "components/Filter";
 
-const Home = ({
+export default function Home({
   syncCollection,
-}: InferGetServerSidePropsType<typeof getServerSideProps>) => {
+}: InferGetServerSidePropsType<typeof getServerSideProps>) {
   const [{ status, data: albums }, setState] = useState<{
     status: "pending" | "resolved" | "rejected";
     data: FormattedAlbum[];
@@ -120,45 +120,44 @@ const Home = ({
 
       <Content>
         <Container>
-          {status === "pending" && <LoadingAlbums shelves={5} />}
+          {
+            {
+              pending: <LoadingAlbums shelves={5} />,
+              rejected: (
+                <ErrorMessage>
+                  Something went wrong when fetching albums
+                </ErrorMessage>
+              ),
+              resolved: shelves.map((_, i) => {
+                const albumsOnShelf = filteredAlbumsInChunks?.[i] ?? [];
 
-          {status === "resolved" &&
-            shelves.map((_, i) => {
-              const albumsOnShelf = filteredAlbumsInChunks?.[i] ?? [];
-
-              return (
-                <AlbumShelf key={`shelf${i}`}>
-                  {albumsOnShelf?.length > 0 ? (
-                    albumsOnShelf.map((album, i) => (
-                      <Fragment key={album.id}>
-                        <Suspense fallback={<Cover invisible />}>
-                          <Album album={album} />
-                        </Suspense>
-                        {i + 1 === albumsOnShelf.length && <Shelf />}
+                return (
+                  <AlbumShelf key={`shelf${i}`}>
+                    {albumsOnShelf?.length > 0 ? (
+                      albumsOnShelf.map((album, i) => (
+                        <Fragment key={album.id}>
+                          <Suspense fallback={<Cover invisible />}>
+                            <Album album={album} />
+                          </Suspense>
+                          {i + 1 === albumsOnShelf.length && <Shelf />}
+                        </Fragment>
+                      ))
+                    ) : (
+                      <Fragment key={i}>
+                        <Cover invisible />
+                        <Shelf />
                       </Fragment>
-                    ))
-                  ) : (
-                    <Fragment key={i}>
-                      <Cover invisible />
-                      <Shelf />
-                    </Fragment>
-                  )}
-                </AlbumShelf>
-              );
-            })}
-
-          {status === "rejected" && (
-            <ErrorMessage>
-              Something went wrong when fetching albums
-            </ErrorMessage>
-          )}
+                    )}
+                  </AlbumShelf>
+                );
+              }),
+            }[status]
+          }
         </Container>
       </Content>
     </Page>
   );
-};
-
-export default Home;
+}
 
 export const getServerSideProps: GetServerSideProps<{
   syncCollection: boolean;
