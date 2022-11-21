@@ -52,7 +52,7 @@ export default function Album({ album }: Props) {
         <Image
           src={album.coverImage}
           alt={`${album.artist} cover image`}
-          style={{ width: "100%", height: "auto" }}
+          style={{ width: "100%", height: "100%" }}
           width={200}
           height={200}
         />
