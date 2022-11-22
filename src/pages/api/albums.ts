@@ -9,7 +9,7 @@ export default async function handler(
 ) {
   const { syncCollection } = req.query;
 
-  const getFn = syncCollection !== "false" ? getAlbums : getAlbumsFromDatabase;
+  const getFn = syncCollection === "false" ? getAlbumsFromDatabase : getAlbums;
 
   const albums = await getFn().catch(catchChainedError("Could not get albums"));
 

@@ -28,9 +28,7 @@ export async function connectToDatabase(): Promise<{
     };
   }
 
-  const options: MongoClientOptions = {};
-
-  const client = new MongoClient(DB_URI ?? "", options);
+  const client = new MongoClient(DB_URI ?? "", {});
   await client.connect().catch(throwChainedError("Client connection error"));
 
   const db = client.db(DB_NAME);
