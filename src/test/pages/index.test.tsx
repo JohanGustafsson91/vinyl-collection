@@ -4,17 +4,19 @@ const mockedDb = db as jest.Mocked<typeof db>;
 
 import { render, screen } from "@testing-library/react";
 import { RawRelease } from "api/albums";
-import { getApiAlbums, getMasterData, getReleases } from "api/mocks/albums";
+import { getMasterData, getReleases } from "api/mocks/albums";
 import mockDataReleases from "api/mocks/albums/releasesMockData.json";
 import { rest } from "api/mocks/server";
 import { Db, MongoClient } from "mongodb";
 import { setupServer } from "msw/node";
-import Home from "pages/index";
+import { NextApiRequest, NextApiResponse } from "next";
+import handler from "pages/api/revalidate";
+import Home, { getStaticProps } from "pages/index";
 
 console.log = jest.fn();
 console.time = jest.fn();
 
-const server = setupServer(getApiAlbums, getReleases(), getMasterData());
+const server = setupServer(getReleases(), getMasterData());
 
 const handlerCalled = jest.fn();
 
@@ -34,7 +36,7 @@ afterAll(() => {
   server.close();
 });
 
-test("should not insert new releases in db if up to date", async () => {
+test("should fetch albums from database and render", async () => {
   const insertMany = jest.fn(() => Promise.resolve(true));
   const deleteMany = jest.fn(() => Promise.resolve(true));
   const findCollections = jest.fn(() =>
@@ -50,26 +52,66 @@ test("should not insert new releases in db if up to date", async () => {
     )
   );
 
-  server.use(
-    rest.get(process.env.DISCOGS_ENDPOINT_RELEASES, async (_req, res, ctx) => {
-      return res(
-        ctx.status(200),
-        ctx.json({
-          releases: [mockDataReleases.releases[0]],
-        })
-      );
-    })
-  );
+  const { props } = await getStaticProps();
 
-  render(<Home syncCollection={true} />);
+  if (!props?.albums) {
+    throw new Error("No fetched albums...");
+  }
+
+  render(<Home albums={props.albums} />);
 
   expect(await screen.findAllByRole("article")).toHaveLength(1);
   expect(insertMany).toHaveBeenCalledTimes(0);
   expect(deleteMany).toHaveBeenCalledTimes(0);
+});
 
+test("should not insert new releases in db if up to date", async () => {
+  const insertMany = jest.fn(() => Promise.resolve(true));
+  const deleteMany = jest.fn(() => Promise.resolve(true));
+  const findCollections = jest.fn(() =>
+    Promise.resolve([mockDataReleases.releases[0]])
+  );
+  mockedDb.connectToDatabase.mockResolvedValue(
+    Promise.resolve(
+      mockDatabase({
+        findCollections,
+        insertMany,
+        deleteMany,
+      })
+    )
+  );
+  server.use(
+    rest.get(
+      process.env.DISCOGS_ENDPOINT_RELEASES ?? "",
+      async (_req, res, ctx) => {
+        return res(
+          ctx.status(200),
+          ctx.json({
+            releases: [mockDataReleases.releases[0]],
+          })
+        );
+      }
+    )
+  );
+  const [revalidate, json, status] = [jest.fn(), jest.fn(), jest.fn()];
+
+  await handler(
+    {
+      query: {
+        secret: "test-token",
+      },
+    } as unknown as NextApiRequest,
+    {
+      revalidate,
+      json,
+      status,
+    } as unknown as NextApiResponse
+  );
+
+  expect(insertMany).toHaveBeenCalledTimes(0);
+  expect(deleteMany).toHaveBeenCalledTimes(0);
   expect(handlerCalled.mock.calls.flat()).toMatchInlineSnapshot(`
 [
-  "GET: http://localhost/api/albums?syncCollection=true",
   "GET: https://api.discogs.com/users/*",
 ]
 `);
@@ -88,56 +130,40 @@ test("should insert new releases in db", async () => {
       })
     )
   );
-
   server.use(
-    rest.get(process.env.DISCOGS_ENDPOINT_RELEASES, async (_req, res, ctx) => {
-      return res(
-        ctx.status(200),
-        ctx.json({
-          releases: [mockDataReleases.releases[0]],
-        })
-      );
-    })
+    rest.get(
+      process.env.DISCOGS_ENDPOINT_RELEASES ?? "",
+      async (_req, res, ctx) => {
+        return res(
+          ctx.status(200),
+          ctx.json({
+            releases: [mockDataReleases.releases[0]],
+          })
+        );
+      }
+    )
+  );
+  const [revalidate, json, status] = [jest.fn(), jest.fn(), jest.fn()];
+
+  await handler(
+    {
+      query: {
+        secret: "test-token",
+      },
+    } as unknown as NextApiRequest,
+    {
+      revalidate,
+      json,
+      status,
+    } as unknown as NextApiResponse
   );
 
-  render(<Home syncCollection={true} />);
-
-  expect(await screen.findAllByRole("article")).toHaveLength(1);
   expect(insertMany).toHaveBeenCalledTimes(1);
   expect(deleteMany).toHaveBeenCalledTimes(0);
   expect(handlerCalled.mock.calls.flat()).toMatchInlineSnapshot(`
 [
-  "GET: http://localhost/api/albums?syncCollection=true",
   "GET: https://api.discogs.com/users/*",
   "GET: https://api.discogs.com/masters/24155",
-]
-`);
-});
-
-test("should fetch albums from database if no sync specified", async () => {
-  const insertMany = jest.fn(() => Promise.resolve(true));
-  const deleteMany = jest.fn(() => Promise.resolve(true));
-  const findCollections = jest.fn(() =>
-    Promise.resolve([mockDataReleases.releases[0]])
-  );
-  mockedDb.connectToDatabase.mockResolvedValue(
-    Promise.resolve(
-      mockDatabase({
-        findCollections,
-        insertMany,
-        deleteMany,
-      })
-    )
-  );
-
-  render(<Home syncCollection={false} />);
-
-  expect(await screen.findAllByRole("article")).toHaveLength(1);
-  expect(insertMany).toHaveBeenCalledTimes(0);
-  expect(deleteMany).toHaveBeenCalledTimes(0);
-  expect(handlerCalled.mock.calls.flat()).toMatchInlineSnapshot(`
-[
-  "GET: http://localhost/api/albums?syncCollection=false",
 ]
 `);
 });
@@ -157,26 +183,38 @@ test("should remove releases from db", async () => {
       })
     )
   );
-
   server.use(
-    rest.get(process.env.DISCOGS_ENDPOINT_RELEASES, async (_req, res, ctx) => {
-      return res(
-        ctx.status(200),
-        ctx.json({
-          releases: [mockDataReleases.releases[1]],
-        })
-      );
-    })
+    rest.get(
+      process.env.DISCOGS_ENDPOINT_RELEASES ?? "",
+      async (_req, res, ctx) => {
+        return res(
+          ctx.status(200),
+          ctx.json({
+            releases: [mockDataReleases.releases[1]],
+          })
+        );
+      }
+    )
+  );
+  const [revalidate, json, status] = [jest.fn(), jest.fn(), jest.fn()];
+
+  await handler(
+    {
+      query: {
+        secret: "test-token",
+      },
+    } as unknown as NextApiRequest,
+    {
+      revalidate,
+      json,
+      status,
+    } as unknown as NextApiResponse
   );
 
-  render(<Home syncCollection={true} />);
-
-  expect(await screen.findAllByRole("article")).toHaveLength(1);
   expect(insertMany).toHaveBeenCalledTimes(1);
   expect(deleteMany).toHaveBeenCalledTimes(1);
   expect(handlerCalled.mock.calls.flat()).toMatchInlineSnapshot(`
 [
-  "GET: http://localhost/api/albums?syncCollection=true",
   "GET: https://api.discogs.com/users/*",
   "GET: https://api.discogs.com/masters/4126",
 ]
@@ -187,9 +225,9 @@ describe("Error handling", () => {
   test("should show error message if db connection failed", async () => {
     mockedDb.connectToDatabase.mockRejectedValue("Database connection error");
 
-    render(<Home syncCollection={true} />);
+    const { notFound } = await getStaticProps();
 
-    expect(await screen.findByText(errorMessage)).toBeInTheDocument();
+    expect(notFound).toBeTruthy();
   });
 
   test("should show error message if db fails to update", async () => {
@@ -206,20 +244,15 @@ describe("Error handling", () => {
       )
     );
 
-    render(<Home syncCollection={true} />);
+    const { notFound } = await getStaticProps();
 
-    expect(await screen.findByText(errorMessage)).toBeInTheDocument();
+    expect(notFound).toBeTruthy();
     expect(insertMany).toHaveBeenCalledTimes(0);
     expect(deleteMany).toHaveBeenCalledTimes(0);
-    expect(handlerCalled.mock.calls.flat()).toMatchInlineSnapshot(`
-[
-  "GET: http://localhost/api/albums?syncCollection=true",
-  "GET: https://api.discogs.com/users/*",
-]
-`);
+    expect(handlerCalled.mock.calls.flat()).toMatchInlineSnapshot(`[]`);
   });
 
-  test("should show error when error in external collection request", async () => {
+  test("should return error if revalidate fails", async () => {
     const insertMany = jest.fn(() => Promise.resolve(true));
     const deleteMany = jest.fn(() => Promise.resolve(true));
     const findCollections = jest.fn(() =>
@@ -234,10 +267,9 @@ describe("Error handling", () => {
         })
       )
     );
-
     server.use(
       rest.get(
-        process.env.DISCOGS_ENDPOINT_RELEASES,
+        process.env.DISCOGS_ENDPOINT_RELEASES ?? "",
         async (_req, res, ctx) => {
           return res(
             ctx.status(400),
@@ -248,18 +280,57 @@ describe("Error handling", () => {
         }
       )
     );
+    const [revalidate, json, status] = [
+      jest.fn(),
+      jest.fn(),
+      jest.fn().mockReturnValue({ send: jest.fn() }),
+    ];
 
-    render(<Home syncCollection={true} />);
+    await handler(
+      {
+        query: {
+          secret: "test-token",
+        },
+      } as unknown as NextApiRequest,
+      {
+        revalidate,
+        json,
+        status,
+      } as unknown as NextApiResponse
+    );
 
-    expect(await screen.findByText(errorMessage)).toBeInTheDocument();
+    expect(status).toHaveBeenCalledWith(500);
     expect(insertMany).toHaveBeenCalledTimes(0);
     expect(deleteMany).toHaveBeenCalledTimes(0);
     expect(handlerCalled.mock.calls.flat()).toMatchInlineSnapshot(`
 [
-  "GET: http://localhost/api/albums?syncCollection=true",
   "GET: https://api.discogs.com/users/*",
 ]
 `);
+  });
+
+  test("should return error if invalid revalidate token", async () => {
+    const [revalidate, json, status] = [
+      jest.fn(),
+      jest.fn(),
+      jest.fn().mockReturnValue({ send: jest.fn(), json: jest.fn() }),
+    ];
+
+    await handler(
+      {
+        query: {
+          secret: "invalid",
+        },
+      } as unknown as NextApiRequest,
+      {
+        revalidate,
+        json,
+        status,
+      } as unknown as NextApiResponse
+    );
+
+    expect(status).toHaveBeenCalledWith(401);
+    expect(handlerCalled.mock.calls.flat()).toMatchInlineSnapshot(`[]`);
   });
 
   test("should not update db when masterdata request fail", async () => {
@@ -273,10 +344,9 @@ describe("Error handling", () => {
         deleteMany,
       })
     );
-
     server.use(
       rest.get(
-        process.env.DISCOGS_ENDPOINT_RELEASES,
+        process.env.DISCOGS_ENDPOINT_RELEASES ?? "",
         async (_req, res, ctx) => {
           return res(
             ctx.status(200),
@@ -301,15 +371,30 @@ describe("Error handling", () => {
         }
       )
     );
+    const [revalidate, json, status] = [
+      jest.fn().mockResolvedValue(true),
+      jest.fn(),
+      jest.fn().mockReturnValue({ send: jest.fn() }),
+    ];
 
-    render(<Home syncCollection={true} />);
+    await handler(
+      {
+        query: {
+          secret: "test-token",
+        },
+      } as unknown as NextApiRequest,
+      {
+        revalidate,
+        json,
+        status,
+      } as unknown as NextApiResponse
+    );
 
-    expect(await screen.findAllByRole("article")).toHaveLength(1);
+    expect(revalidate).toHaveBeenCalledWith("/");
     expect(insertMany).toHaveBeenCalledTimes(1);
     expect(deleteMany).toHaveBeenCalledTimes(0);
     expect(handlerCalled.mock.calls.flat()).toMatchInlineSnapshot(`
 [
-  "GET: http://localhost/api/albums?syncCollection=true",
   "GET: https://api.discogs.com/users/*",
   "GET: https://api.discogs.com/masters/24155",
   "GET: https://api.discogs.com/masters/4126",
