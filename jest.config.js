@@ -11,4 +11,5 @@ module.exports = createJestConfig({
   verbose: true,
   collectCoverage: true,
   coverageReporters: ["json", "lcov", "text", "text-summary"],
+  collectCoverageFrom: ["<rootDir>/src/**/*.{js,jsx,tsx,ts}", "!**/mocks/**"],
 });

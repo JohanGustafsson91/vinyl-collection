@@ -1,58 +1,19 @@
-import {
-  Fragment,
-  lazy,
-  Suspense,
-  useCallback,
-  useEffect,
-  useState,
-} from "react";
-import { FormattedAlbum } from "api/albums";
-import { GetServerSideProps, InferGetServerSidePropsType } from "next";
+import { Fragment, Suspense, useCallback, useEffect, useState } from "react";
+import { getAlbumsFromDatabase } from "api/albums";
+import { InferGetStaticPropsType } from "next";
 import Head from "next/head";
 import styled from "styled-components";
 import { breakpoint, breakpointSize, fontSize, space } from "theme";
 
-const loadAlbumComponent = () => import("components/Album/Album");
-const Album = lazy(loadAlbumComponent);
-import { Cover } from "components/Album/Album.Cover";
+import { Album, Cover } from "components/Album";
 import { Filter, FilterOptions } from "components/Filter";
 
 export default function Home({
-  syncCollection,
-}: InferGetServerSidePropsType<typeof getServerSideProps>) {
-  const [{ status, data: albums }, setState] = useState<{
-    status: "pending" | "resolved" | "rejected";
-    data: FormattedAlbum[];
-  }>({
-    status: "pending",
-    data: [],
-  });
-
+  albums,
+}: InferGetStaticPropsType<typeof getStaticProps>) {
   const [filteredAlbums, setFilteredAlbums] = useState(albums);
 
   const { width } = useWindowSize();
-
-  useEffect(
-    function fetchAlbums() {
-      fetch(`/api/albums?syncCollection=${syncCollection}`)
-        .then((res) => res.json())
-        .then((albums) => {
-          loadAlbumComponent();
-
-          return setState({
-            status: "resolved",
-            data: albums,
-          });
-        })
-        .catch(() =>
-          setState({
-            status: "rejected",
-            data: [],
-          })
-        );
-    },
-    [syncCollection]
-  );
 
   useEffect(
     function updateFilteredAlbums() {
@@ -111,70 +72,54 @@ export default function Home({
       <Menu>
         <MenuContent>
           <Logo>Vinyl Collection</Logo>
-          <Filter
-            onFilter={handleFilterAlbums}
-            disabled={status !== "resolved"}
-          />
+          <Filter onFilter={handleFilterAlbums} />
         </MenuContent>
       </Menu>
 
       <Content>
         <Container>
-          {
-            {
-              pending: spliceArrayIntoChunks(new Array(5).fill(null), 1).map(
-                (_, i) => (
-                  <AlbumShelf key={`shelf${i}`}>
-                    <Fragment>
-                      <Cover invisible />
-                      <Shelf />
-                    </Fragment>
-                  </AlbumShelf>
-                )
-              ),
-              resolved: shelves.map((_, i) => {
-                const albumsOnShelf = filteredAlbumsInChunks?.[i] ?? [];
+          {shelves.map((_, i) => {
+            const albumsOnShelf = filteredAlbumsInChunks?.[i] ?? [];
 
-                return (
-                  <AlbumShelf key={`shelf${i}`}>
-                    {albumsOnShelf?.length > 0 ? (
-                      albumsOnShelf.map((album, i) => (
-                        <Fragment key={album.id}>
-                          <Suspense fallback={<Cover invisible />}>
-                            <Album album={album} />
-                          </Suspense>
-                          {i + 1 === albumsOnShelf.length && <Shelf />}
-                        </Fragment>
-                      ))
-                    ) : (
-                      <Fragment key={i}>
-                        <Cover invisible />
-                        <Shelf />
-                      </Fragment>
-                    )}
-                  </AlbumShelf>
-                );
-              }),
-              rejected: (
-                <ErrorMessage>
-                  Something went wrong when fetching albums
-                </ErrorMessage>
-              ),
-            }[status]
-          }
+            return (
+              <AlbumShelf key={`shelf${i}`}>
+                {albumsOnShelf?.length > 0 ? (
+                  albumsOnShelf.map((album, i) => (
+                    <Fragment key={album.id}>
+                      <Suspense fallback={<Cover invisible />}>
+                        <Album album={album} />
+                      </Suspense>
+                      {i + 1 === albumsOnShelf.length && <Shelf />}
+                    </Fragment>
+                  ))
+                ) : (
+                  <Fragment key={i}>
+                    <Cover invisible />
+                    <Shelf />
+                  </Fragment>
+                )}
+              </AlbumShelf>
+            );
+          })}
         </Container>
       </Content>
     </Page>
   );
 }
 
-export const getServerSideProps: GetServerSideProps<{
-  syncCollection: boolean;
-}> = async ({ query }) => ({
-  props: {
-    syncCollection: query.syncCollection !== undefined,
-  },
-});
+export async function getStaticProps() {
+  const albums = await getAlbumsFromDatabase().catch(() => undefined);
+
+  return albums
+    ? {
+        props: {
+          albums,
+        },
+      }
+    : {
+        notFound: true,
+      };
+}
 
 function spliceArrayIntoChunks<T>(
   arr: Array<T>,

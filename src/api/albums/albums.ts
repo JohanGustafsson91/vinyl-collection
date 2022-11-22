@@ -137,7 +137,7 @@ function getFormattedAlbums(raw: RawReleaseWithMasterData[]): FormattedAlbum[] {
         artist: basic_information.artists[0].name,
         title: basic_information.title,
         printedYear: basic_information.year,
-        releasedYear: masterData?.year,
+        releasedYear: masterData?.year ?? null,
         thumbnail: basic_information.thumb,
         coverImage: basic_information.cover_image,
         format: basic_information.formats[0].name,

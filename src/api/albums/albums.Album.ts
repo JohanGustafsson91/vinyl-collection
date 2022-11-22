@@ -3,7 +3,7 @@ export interface FormattedAlbum {
   artist: string;
   title: string;
   printedYear: number;
-  releasedYear: number | undefined;
+  releasedYear: number | null;
   thumbnail: string;
   coverImage: string;
   format: string;
