@@ -5,8 +5,7 @@ import Head from "next/head";
 import styled from "styled-components";
 import { breakpoint, breakpointSize, fontSize, space } from "theme";
 
-import Album from "components/Album/Album";
-import { Cover } from "components/Album/Album.Cover";
+import { Album, Cover } from "components/Album";
 import { Filter, FilterOptions } from "components/Filter";
 
 export default function Home({

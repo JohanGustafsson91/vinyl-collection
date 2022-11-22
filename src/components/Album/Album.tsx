@@ -18,7 +18,7 @@ import { Cover } from "./Album.Cover";
 const loadAlbumDetailsComponent = () => import("./Album.Details");
 const AlbumDetails = lazy(loadAlbumDetailsComponent);
 
-export default function Album({ album }: Props) {
+export function Album({ album }: Props) {
   const [detailsViewVisible, setIsDetailViewVisible] = useState(false);
   const refDetailsPage = useRef<HTMLDivElement | null>(null);
 
