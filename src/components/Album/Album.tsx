@@ -13,7 +13,7 @@ import Image from "next/image";
 import styled, { css } from "styled-components";
 import { breakpoint, space } from "theme";
 
-import { Cover } from "./Album.Cover";
+import { Cover } from ".";
 
 const loadAlbumDetailsComponent = () => import("./Album.Details");
 const AlbumDetails = lazy(loadAlbumDetailsComponent);
