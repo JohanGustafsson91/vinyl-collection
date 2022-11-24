@@ -1,4 +1,4 @@
-import { Db, MongoClient, MongoClientOptions } from "mongodb";
+import { Db, MongoClient } from "mongodb";
 
 import { logger, throwChainedError } from "utils";
 

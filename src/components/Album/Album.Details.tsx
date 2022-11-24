@@ -122,7 +122,7 @@ const DetailsLabel = styled.span`
 `;
 
 const DetailsArtist = styled.span`
-  font-weight: bold;
+  font-weight: 700;
   line-height: 1;
   margin-bottom: ${space(2)};
   color: var(--color-detail-text);

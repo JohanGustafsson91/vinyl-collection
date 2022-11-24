@@ -1,4 +1,4 @@
-import { connectToDatabase } from "db/db.connect";
+import { connectToDatabase } from "db";
 import { Db } from "mongodb";
 
 import { catchChainedError, logger, throwChainedError } from "utils";
