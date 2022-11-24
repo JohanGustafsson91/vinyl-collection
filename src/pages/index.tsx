@@ -175,7 +175,7 @@ const Shelf = styled.div`
   border-bottom: ${fontSize(4)} solid #eae1d4;
   border-left: ${space(4)} solid transparent;
   border-right: ${space(4)} solid transparent;
-  margin-top: -${space(3)};
+  margin-top: -${space(2)};
   left: -${space(4)};
   width: calc(100% + ${space(5)});
   z-index: var(--zIndex-shelf);
