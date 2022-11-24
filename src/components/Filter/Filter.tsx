@@ -108,7 +108,7 @@ interface Props {
   onFilter: (arg: FilterOptions) => void;
 }
 
-export type FilterOptions = {
+export interface FilterOptions {
   query: string;
   includeTrack: boolean;
-};
+}

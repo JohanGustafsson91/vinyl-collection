@@ -50,7 +50,7 @@ class Document extends NextDocument {
             crossOrigin="true"
           />
           <link
-            href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;800&display=swap"
+            href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@400;500;600;700&display=swap"
             rel="stylesheet"
           />
         </Head>
