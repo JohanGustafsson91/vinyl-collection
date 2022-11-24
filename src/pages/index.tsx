@@ -1,19 +1,17 @@
-import { Fragment, Suspense, useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { getAlbumsFromDatabase } from "api/albums";
 import { InferGetStaticPropsType } from "next";
 import Head from "next/head";
 import styled from "styled-components";
 import { breakpoint, breakpointSize, fontSize, space } from "theme";
 
-import { Album, Cover } from "components/Album";
+import { Album } from "components/Album";
 import { Filter, FilterOptions } from "components/Filter";
 
 export default function Home({
   albums,
 }: InferGetStaticPropsType<typeof getStaticProps>) {
   const [filteredAlbums, setFilteredAlbums] = useState(albums);
-
-  const { width } = useWindowSize();
 
   useEffect(
     function updateFilteredAlbums() {
@@ -51,16 +49,6 @@ export default function Home({
     [albums]
   );
 
-  const numberOfAlbumsOnOneShelf =
-    width < Number.parseInt(breakpointSize("max-width")) ? 2 : 4;
-
-  const shelves = spliceArrayIntoChunks(albums, numberOfAlbumsOnOneShelf);
-
-  const filteredAlbumsInChunks = spliceArrayIntoChunks(
-    filteredAlbums,
-    numberOfAlbumsOnOneShelf
-  );
-
   return (
     <Page>
       <Head>
@@ -78,29 +66,12 @@ export default function Home({
 
       <Content>
         <Container>
-          {shelves.map((_, i) => {
-            const albumsOnShelf = filteredAlbumsInChunks?.[i] ?? [];
-
-            return (
-              <AlbumShelf key={`shelf${i}`}>
-                {albumsOnShelf?.length > 0 ? (
-                  albumsOnShelf.map((album, i) => (
-                    <Fragment key={album.id}>
-                      <Suspense fallback={<Cover invisible />}>
-                        <Album album={album} />
-                      </Suspense>
-                      {i + 1 === albumsOnShelf.length && <Shelf />}
-                    </Fragment>
-                  ))
-                ) : (
-                  <Fragment key={i}>
-                    <Cover invisible />
-                    <Shelf />
-                  </Fragment>
-                )}
-              </AlbumShelf>
-            );
-          })}
+          {filteredAlbums.map((album, i) => (
+            <div key={album.id} style={{ placeSelf: "center" }}>
+              <Album album={album} />
+              {i % 2 === 0 ? <Shelf /> : null}
+            </div>
+          ))}
         </Container>
       </Content>
     </Page>
@@ -121,38 +92,6 @@ export async function getStaticProps() {
       };
 }
 
-function spliceArrayIntoChunks<T>(
-  arr: Array<T>,
-  size: number
-): Array<Array<T>> {
-  return Array.from({ length: Math.ceil(arr.length / size) }, (_, i) =>
-    arr.slice(i * size, i * size + size)
-  );
-}
-
-function useWindowSize() {
-  const isSSR = !globalThis.window;
-
-  const [windowSize, setWindowSize] = useState({
-    width: isSSR ? 1200 : window.innerWidth,
-    height: isSSR ? 800 : window.innerHeight,
-  });
-
-  function changeWindowSize() {
-    setWindowSize({ width: window.innerWidth, height: window.innerHeight });
-  }
-
-  useEffect(() => {
-    window && window.addEventListener("resize", changeWindowSize);
-
-    return () => {
-      window && window.removeEventListener("resize", changeWindowSize);
-    };
-  }, []);
-
-  return windowSize;
-}
-
 const Page = styled.div`
   background-color: var(--color-content);
 
@@ -160,13 +99,6 @@ const Page = styled.div`
     background-color: var(--color-background);
     padding: ${space(5)} 0 0 0;
   }
-`;
-
-const Content = styled.div`
-  position: relative;
-  overflow: hidden;
-  height: 100%;
-  width: 100%;
 `;
 
 const Menu = styled.div`
@@ -199,23 +131,6 @@ const MenuContent = styled.div`
   }
 `;
 
-const Container = styled.div`
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  flex: 1;
-  max-width: ${breakpointSize("max-width")};
-  background-color: var(--color-content);
-  margin: 0 0 0 ${fontSize(6)};
-  padding-top: ${space(3)};
-
-  ${breakpoint("max-width")} {
-    margin: 0 auto;
-    padding-top: ${space(5)};
-  }
-`;
-
 const Logo = styled.span`
   font-weight: 700;
   font-size: ${fontSize(3)};
@@ -227,29 +142,40 @@ const Logo = styled.span`
   }
 `;
 
-const AlbumShelf = styled.div`
+const Content = styled.div`
   position: relative;
-  float: left;
-  display: flex;
-  flex: 1;
-  justify-content: space-around;
-  margin-bottom: ${space(5)};
-  padding-left: ${space(2)};
-  padding-right: ${space(5)};
+  overflow: hidden;
+  height: 100%;
+  width: 100%;
+`;
+
+const Container = styled.div`
+  position: relative;
+  width: 100%;
+  max-width: ${breakpointSize("max-width")};
+  background-color: var(--color-content);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  row-gap: ${space(5)};
+  right: -${fontSize(6)};
+  padding: ${space(3)} ${fontSize(6)} ${space(5)} 0;
 
   ${breakpoint("max-width")} {
-    margin-bottom: ${space(6)};
-    padding-left: ${space(4)};
-    padding-right: ${space(4)};
+    margin: 0 auto;
+    padding-top: ${space(5)};
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    right: 0;
+    padding: ${space(5)} ${space(4)} ${space(6)} ${space(4)};
   }
 `;
 
 const Shelf = styled.div`
+  position: absolute;
+  top: inherit;
   border-bottom: ${fontSize(4)} solid #eae1d4;
   border-left: ${space(4)} solid transparent;
   border-right: ${space(4)} solid transparent;
-  position: absolute;
-  bottom: -${space(3)};
+  margin-top: -${space(3)};
   left: -${space(4)};
   width: calc(100% + ${space(5)});
   z-index: var(--zIndex-shelf);
@@ -271,9 +197,4 @@ const Shelf = styled.div`
       height: ${fontSize(0)};
     }
   }
-`;
-
-const ErrorMessage = styled.p`
-  color: var(--color-error);
-  font-style: italic;
 `;
