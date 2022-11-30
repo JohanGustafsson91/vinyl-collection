@@ -18,7 +18,7 @@ export function Filter({ onFilter }: Props) {
 
   useEffect(
     function callBackWhenChangedFilter() {
-      onFilter({
+      return onFilter({
         query: debouncedQuery,
         includeTrack: filter.includeTrack,
       });

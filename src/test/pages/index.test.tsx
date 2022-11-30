@@ -3,6 +3,7 @@ jest.mock("db/db.connect");
 const mockedDb = db as jest.Mocked<typeof db>;
 
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { RawRelease } from "api/albums";
 import { getMasterData, getReleases } from "api/mocks/albums";
 import mockDataReleases from "api/mocks/albums/releasesMockData.json";
@@ -12,6 +13,10 @@ import { setupServer } from "msw/node";
 import { NextApiRequest, NextApiResponse } from "next";
 import handler from "pages/api/revalidate";
 import Home, { getStaticProps } from "pages/index";
+
+const user = userEvent.setup({
+  advanceTimers: () => jest.runOnlyPendingTimers(),
+});
 
 console.log = jest.fn();
 console.time = jest.fn();
@@ -37,6 +42,8 @@ afterAll(() => {
 });
 
 test("should fetch albums from database and render", async () => {
+  jest.useFakeTimers();
+
   const insertMany = jest.fn(() => Promise.resolve(true));
   const deleteMany = jest.fn(() => Promise.resolve(true));
   const findCollections = jest.fn(() =>
@@ -60,9 +67,31 @@ test("should fetch albums from database and render", async () => {
 
   render(<Home albums={props.albums} />);
 
-  expect(await screen.findAllByRole("article")).toHaveLength(1);
+  const albums = await screen.findAllByRole("article");
+
+  expect(albums).toHaveLength(1);
   expect(insertMany).toHaveBeenCalledTimes(0);
   expect(deleteMany).toHaveBeenCalledTimes(0);
+
+  const inputFilter = screen.getByRole("textbox");
+  const includeTrack = screen.getByRole("checkbox");
+
+  await user.click(includeTrack);
+  await user.type(inputFilter, "Strawberry Fields Forever");
+
+  jest.runOnlyPendingTimers();
+
+  expect(screen.queryAllByRole("article")).toHaveLength(0);
+
+  await user.click(includeTrack);
+
+  jest.runOnlyPendingTimers();
+
+  expect(screen.getAllByRole("article")).toHaveLength(1);
+
+  await user.click(screen.getByRole("article"));
+
+  expect(await screen.findByText(/Release/i)).toBeInTheDocument();
 });
 
 test("should not insert new releases in db if up to date", async () => {
@@ -423,5 +452,3 @@ const mockDatabase = ({
     })),
   } as unknown as Db,
 });
-
-const errorMessage = "Something went wrong when fetching albums";
