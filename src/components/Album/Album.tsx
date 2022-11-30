@@ -57,20 +57,20 @@ export function Album({ album }: Props) {
       </Cover>
 
       <DetailsPage isActive={detailsViewVisible} ref={refDetailsPage}>
-        {detailsViewVisible && (
+        {detailsViewVisible ? (
           <Suspense fallback={<div>Loading...</div>}>
             <AlbumDetails album={album} />
           </Suspense>
-        )}
+        ) : null}
       </DetailsPage>
-      {detailsViewVisible && <Overlay />}
+      {detailsViewVisible ? <Overlay /> : null}
     </Container>
   );
 }
 
 function useOnClickOutside(
   ref: MutableRefObject<HTMLDivElement | null>,
-  handler: (e: MouseEvent | TouchEvent) => void
+  handler: (_e: MouseEvent | TouchEvent) => void
 ) {
   useEffect(
     function addEventListeners() {

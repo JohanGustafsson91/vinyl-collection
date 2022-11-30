@@ -20,8 +20,8 @@ export default function Home({
     [albums]
   );
 
-  const handleFilterAlbums = useCallback(
-    ({ query, includeTrack }: FilterOptions) => {
+  const memoizedHandleFilterAlbums = useCallback(
+    function handleFilterAlbum({ query, includeTrack }: FilterOptions) {
       if (query === "") {
         return setFilteredAlbums(albums);
       }
@@ -60,7 +60,7 @@ export default function Home({
       <Menu>
         <MenuContent>
           <Logo>Vinyl Collection</Logo>
-          <Filter onFilter={handleFilterAlbums} />
+          <Filter onFilter={memoizedHandleFilterAlbums} />
         </MenuContent>
       </Menu>
 
