@@ -240,6 +240,8 @@ const Container = styled.div`
   row-gap: ${space(5)};
   right: -${fontSize(6)};
   padding: ${space(3)} ${fontSize(6)} ${space(5)} 0;
+  align-content: flex-start;
+  min-height: calc(100vh - 126px);
 
   ${breakpoint("max-width")} {
     margin: 0 auto;
@@ -247,6 +249,7 @@ const Container = styled.div`
     grid-template-columns: 1fr 1fr 1fr 1fr;
     right: 0;
     padding: ${space(5)} ${space(4)} ${space(6)} ${space(4)};
+    min-height: calc(100vh - 175px);
   }
 `;
 
