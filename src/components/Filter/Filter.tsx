@@ -39,6 +39,7 @@ export function Filter({ onFilter }: Props) {
   return (
     <div>
       <Input
+        type="text"
         name="query"
         placeholder="Filter albums"
         value={filter.query}
@@ -47,6 +48,7 @@ export function Filter({ onFilter }: Props) {
       />
       <Label>
         <Checkbox
+          type="checkbox"
           name="includeTrack"
           checked={filter.includeTrack}
           onChange={handleFilter}
@@ -84,9 +86,6 @@ const Input = styled.input`
   margin-right: ${space(3)};
   outline: 0;
 `;
-Input.defaultProps = {
-  type: "text",
-};
 
 const Label = styled.label`
   white-space: nowrap;
@@ -100,15 +99,12 @@ const Checkbox = styled.input`
   margin-right: ${space(2)};
   padding: ${space(2)};
 `;
-Checkbox.defaultProps = {
-  type: "checkbox",
-};
 
 interface Props {
-  onFilter: (arg: FilterOptions) => void;
+  readonly onFilter: (arg: FilterOptions) => void;
 }
 
 export interface FilterOptions {
-  query: string;
-  includeTrack: boolean;
+  readonly query: string;
+  readonly includeTrack: boolean;
 }

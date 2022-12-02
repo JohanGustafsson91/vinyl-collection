@@ -1,3 +1,5 @@
+/* eslint-disable functional/immutable-data */
+
 import * as db from "db/db.connect";
 jest.mock("db/db.connect");
 const mockedDb = db as jest.Mocked<typeof db>;
@@ -41,7 +43,7 @@ afterAll(() => {
   server.close();
 });
 
-test("should fetch albums from database and render", async () => {
+test("should be able to view, filer and see details about albums", async () => {
   jest.useFakeTimers();
 
   const insertMany = jest.fn(() => Promise.resolve(true));
@@ -437,9 +439,9 @@ const mockDatabase = ({
   insertMany,
   deleteMany,
 }: {
-  findCollections: jest.Mock<Promise<RawRelease[]>>;
-  insertMany: jest.Mock<Promise<boolean>>;
-  deleteMany: jest.Mock<Promise<boolean>>;
+  readonly findCollections: jest.Mock<Promise<readonly RawRelease[]>>;
+  readonly insertMany: jest.Mock<Promise<boolean>>;
+  readonly deleteMany: jest.Mock<Promise<boolean>>;
 }) => ({
   client: {} as unknown as MongoClient,
   db: {

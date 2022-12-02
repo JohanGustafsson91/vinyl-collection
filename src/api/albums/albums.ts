@@ -31,12 +31,12 @@ export async function getAlbums() {
     await Promise.all(
       albumsToSaveInDatabaseWithoutMasterData.map(fetchMasterDataForAlbum)
     )
-  ).filter(Boolean) as RawReleaseWithMasterData[];
+  ).filter(Boolean) as readonly RawReleaseWithMasterData[];
 
   const albumIdsToRemoveFromDatabase = storedAlbums.reduce((prev, album) => {
     const found = fetchedAlbums.find(({ id }) => id === album.id);
     return [...prev, ...(found ? [] : [album.id])];
-  }, [] as number[]);
+  }, [] as readonly number[]);
 
   logger.info("albumsToInsertInDatabase", albumsToInsertInDatabase);
   logger.info("albumIdsToRemoveFromDatabase", albumIdsToRemoveFromDatabase);
@@ -44,7 +44,9 @@ export async function getAlbums() {
   await Promise.all([
     // Insert albums in db
     albumsToInsertInDatabase.length &&
-      db.collection(COLLECTION_ALBUMS).insertMany(albumsToInsertInDatabase),
+      db
+        .collection(COLLECTION_ALBUMS)
+        .insertMany([...albumsToInsertInDatabase]),
     // Remove albums from db
     albumIdsToRemoveFromDatabase.length &&
       db.collection(COLLECTION_ALBUMS).deleteMany({
@@ -83,7 +85,7 @@ async function getStoredAlbumsFromDb(db: Db) {
     .catch(throwChainedError("Could not get collections from database"));
   logTimeEnd();
 
-  return storedAlbums as unknown as RawReleaseWithMasterData[];
+  return storedAlbums as unknown as readonly RawReleaseWithMasterData[];
 }
 
 async function fetchAlbums() {
@@ -127,9 +129,11 @@ async function fetchMasterDataForAlbum(
   };
 }
 
-function getFormattedAlbums(raw: RawReleaseWithMasterData[]): FormattedAlbum[] {
-  return raw
-    .map(function formatAlbum(release) {
+function getFormattedAlbums(
+  raw: readonly RawReleaseWithMasterData[]
+): readonly FormattedAlbum[] {
+  const formattedAllbums: readonly FormattedAlbum[] = raw.map(
+    function formatAlbum(release) {
       const { basic_information, masterData } = release;
 
       return {
@@ -161,15 +165,18 @@ function getFormattedAlbums(raw: RawReleaseWithMasterData[]): FormattedAlbum[] {
             };
           }) ?? [],
       };
-    })
-    .sort(function sortByTitle(a, b) {
+    }
+  );
+
+  return [
+    function sortByTitle(a: FormattedAlbum, b: FormattedAlbum) {
       const [titleA, titleB] = [a.title, b.title].map(simplifyArtistName);
       return titleB.localeCompare(titleA);
-    })
-    .sort(function sortByReleaseYear(a, b) {
+    },
+    function sortByReleaseYear(a: FormattedAlbum, b: FormattedAlbum) {
       return (a.releasedYear || 0) - (b.releasedYear || 0);
-    })
-    .sort(function sortByArtist(a, b) {
+    },
+    function sortByArtist(a: FormattedAlbum, b: FormattedAlbum) {
       const [nameA, nameB] = [a.artist, b.artist].map(simplifyArtistName);
 
       if (nameA < nameB) {
@@ -181,7 +188,8 @@ function getFormattedAlbums(raw: RawReleaseWithMasterData[]): FormattedAlbum[] {
       }
 
       return 0;
-    });
+    },
+  ].reduce((list, compareFn) => [...list].sort(compareFn), formattedAllbums);
 }
 
 function simplifyArtistName(name: string) {

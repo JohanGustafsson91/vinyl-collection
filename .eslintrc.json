@@ -4,8 +4,8 @@
   },
   "env": { "es6": true },
   "root": true,
-  "plugins": ["simple-import-sort", "import"],
-  "extends": ["next", "prettier"],
+  "plugins": ["simple-import-sort", "import", "functional"],
+  "extends": ["next", "prettier", "plugin:functional/no-mutations"],
   "rules": {
     "simple-import-sort/imports": [
       "error",

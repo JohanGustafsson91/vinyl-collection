@@ -16,6 +16,7 @@ class Document extends NextDocument {
     const originalRenderPage = ctx.renderPage;
 
     try {
+      // eslint-disable-next-line functional/immutable-data
       ctx.renderPage = function renderPage() {
         return originalRenderPage({
           enhanceApp: (App) => (props) =>

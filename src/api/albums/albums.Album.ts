@@ -1,27 +1,27 @@
 export interface FormattedAlbum {
-  id: number;
-  artist: string;
-  title: string;
-  printedYear: number;
-  releasedYear: number | null;
-  thumbnail: string;
-  coverImage: string;
-  format: string;
-  numberOfDiscs: string;
-  label: string;
-  labelCategoryNumber: string;
-  genres: string[];
-  tracks: FormattedTrack[];
-  videos: FormattedVideo[];
+  readonly id: number;
+  readonly artist: string;
+  readonly title: string;
+  readonly printedYear: number;
+  readonly releasedYear: number | null;
+  readonly thumbnail: string;
+  readonly coverImage: string;
+  readonly format: string;
+  readonly numberOfDiscs: string;
+  readonly label: string;
+  readonly labelCategoryNumber: string;
+  readonly genres: readonly string[];
+  readonly tracks: readonly FormattedTrack[];
+  readonly videos: readonly FormattedVideo[];
 }
 
 type FormattedTrack = {
-  title: string;
-  position: string;
-  duration: string;
+  readonly title: string;
+  readonly position: string;
+  readonly duration: string;
 };
 
 type FormattedVideo = {
-  url: string;
-  title: string;
+  readonly url: string;
+  readonly title: string;
 };

@@ -30,6 +30,7 @@ export function Album({ album }: Props) {
 
   useEffect(
     function disableBodyScoll() {
+      // eslint-disable-next-line functional/immutable-data
       document.body.style.overflow = detailsViewVisible ? "hidden" : "visible";
     },
     [detailsViewVisible]
@@ -91,7 +92,7 @@ function useOnClickOutside(
   );
 }
 
-const DetailsPage = styled.div<{ isActive: boolean }>`
+const DetailsPage = styled.div<{ readonly isActive: boolean }>`
   position: fixed;
   top: 0;
   right: 0;
@@ -132,7 +133,7 @@ const Container = styled.article`
   outline: 0;
 `;
 
-const Cover = styled.div<{ invisible?: boolean }>`
+const Cover = styled.div<{ readonly invisible?: boolean }>`
   position: relative;
   transition: all 0.2s linear;
   z-index: var(--zIndex-cover);
@@ -160,5 +161,5 @@ const Cover = styled.div<{ invisible?: boolean }>`
 `;
 
 interface Props {
-  album: FormattedAlbum;
+  readonly album: FormattedAlbum;
 }

@@ -15,6 +15,7 @@ export const getReleases = () =>
 
       albums.forEach(function cleanMasterData(album) {
         // @ts-expect-error Master data is not included in real response
+        // eslint-disable-next-line functional/immutable-data
         delete album["masterData"];
       });
 
@@ -29,7 +30,11 @@ export const getReleases = () =>
   );
 
 export const getMasterData = () =>
-  rest.get<{}, { releaseId: string }, RawMasterData | Partial<RawMasterData>>(
+  rest.get<
+    {},
+    { readonly releaseId: string },
+    RawMasterData | Partial<RawMasterData>
+  >(
     "https://api.discogs.com/masters/:releaseId",
     function resolver(req, res, ctx) {
       const { releaseId } = req.params;
