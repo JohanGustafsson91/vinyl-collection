@@ -4,11 +4,7 @@ import { breakpoint, fontSize, space } from "theme";
 
 import type { FormattedAlbum } from "shared/FormattedAlbum";
 
-export default function AlbumDetails({
-  album,
-}: {
-  readonly album: FormattedAlbum;
-}) {
+export function AlbumDetails({ album }: { readonly album: FormattedAlbum }) {
   return (
     <>
       <DetailsHeader>
@@ -61,43 +57,51 @@ export default function AlbumDetails({
       <DetailsGrid>
         <div>
           <DetailsLabel>Tracklist</DetailsLabel>
-
-          {album.tracks.length ? (
-            <DetailsTrackList>
-              {album.tracks.map(function renderTrack(track) {
-                return (
-                  <DetailsTrack key={track.title}>{track.title}</DetailsTrack>
-                );
-              })}
-            </DetailsTrackList>
-          ) : (
-            <DetailsSecondaryLabel>Not defined</DetailsSecondaryLabel>
-          )}
+          {
+            {
+              listWithItems: (
+                <DetailsTrackList>
+                  {album.tracks.map((track) => (
+                    <DetailsTrack key={track.title}>{track.title}</DetailsTrack>
+                  ))}
+                </DetailsTrackList>
+              ),
+              listWithNoItems: (
+                <DetailsSecondaryLabel>Not defined</DetailsSecondaryLabel>
+              ),
+            }[listLengthToConstant(album.tracks)]
+          }
         </div>
 
         <div>
           <DetailsLabel>Videos</DetailsLabel>
-
-          {album.videos.length ? (
-            <DetailsTrackList>
-              {album.videos.map(function renderLinkToVideo(video) {
-                return (
-                  <DetailsTrack key={video.title + video.url}>
-                    <a href={video.url} target="_blank" rel="noreferrer">
-                      {video.title}
-                    </a>
-                  </DetailsTrack>
-                );
-              })}
-            </DetailsTrackList>
-          ) : (
-            <DetailsSecondaryLabel>Not defined</DetailsSecondaryLabel>
-          )}
+          {
+            {
+              listWithItems: (
+                <DetailsTrackList>
+                  {album.videos.map((video) => (
+                    <DetailsTrack key={video.title + video.url}>
+                      <a href={video.url} target="_blank" rel="noreferrer">
+                        {video.title}
+                      </a>
+                    </DetailsTrack>
+                  ))}
+                  )
+                </DetailsTrackList>
+              ),
+              listWithNoItems: (
+                <DetailsSecondaryLabel>Not defined</DetailsSecondaryLabel>
+              ),
+            }[listLengthToConstant(album.videos)]
+          }
         </div>
       </DetailsGrid>
     </>
   );
 }
+
+const listLengthToConstant = (list: readonly unknown[]) =>
+  list.length ? "listWithItems" : "listWithNoItems";
 
 const DetailsHeader = styled.div`
   display: flex;
