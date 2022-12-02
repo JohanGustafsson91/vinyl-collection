@@ -112,12 +112,10 @@ export async function getStaticProps() {
 }
 
 function formatAlbums(raw: readonly RawReleaseWithMasterData[]) {
-  const formattedAllbums: readonly FormattedAlbum[] = raw.map(
-    function formatAlbum(release) {
-      const { basic_information, masterData } = release;
-
+  const formattedAlbums: readonly FormattedAlbum[] = raw.map(
+    function formatAlbum({ id, basic_information, masterData }) {
       return {
-        id: release.id,
+        id,
         artist: basic_information.artists[0].name,
         title: basic_information.title,
         printedYear: basic_information.year,
@@ -153,7 +151,7 @@ function formatAlbums(raw: readonly RawReleaseWithMasterData[]) {
       ...[a, b]: readonly [a: FormattedAlbum, b: FormattedAlbum]
     ) {
       const [titleA, titleB] = [a.title, b.title].map(simplifyArtistName);
-      return titleB.localeCompare(titleA);
+      return titleA.localeCompare(titleB);
     },
     function sortByReleaseYear(
       ...[a, b]: readonly [a: FormattedAlbum, b: FormattedAlbum]
@@ -166,7 +164,7 @@ function formatAlbums(raw: readonly RawReleaseWithMasterData[]) {
       const [nameA, nameB] = [a.artist, b.artist].map(simplifyArtistName);
       return nameA < nameB ? -1 : nameA > nameB ? 1 : 0;
     },
-  ].reduce((list, compareFn) => [...list].sort(compareFn), formattedAllbums);
+  ].reduce((list, compareFn) => [...list].sort(compareFn), formattedAlbums);
 }
 
 function simplifyArtistName(name: string) {

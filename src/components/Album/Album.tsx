@@ -50,7 +50,7 @@ export function Album({ album }: Props) {
       <Cover>
         <Image
           src={album.coverImage}
-          alt={`${album.artist} cover image`}
+          alt={`${album.artist} - ${album.title} (${album.releasedYear}) cover image`}
           style={{ width: "100%", height: "100%" }}
           width={200}
           height={200}
