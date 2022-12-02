@@ -1,8 +1,6 @@
 import {
-  lazy,
   MouseEvent,
   MutableRefObject,
-  Suspense,
   TouchEvent,
   useEffect,
   useRef,
@@ -14,20 +12,21 @@ import { breakpoint, space } from "theme";
 
 import { FormattedAlbum } from "shared/FormattedAlbum";
 
-const loadAlbumDetailsComponent = () => import("./Album.Details");
-const AlbumDetails = lazy(loadAlbumDetailsComponent);
+import { AlbumDetails } from "./Album.Details";
 
 export function Album({ album }: Props) {
-  const [detailsViewVisible, setIsDetailViewVisible] = useState(false);
-  const refDetailsPage = useRef<HTMLDivElement | null>(null);
+  const [detailViewVisibility, setDetailViewVisibility] =
+    useState<Visibility>("hidden");
+
+  const refDetailView = useRef<HTMLDivElement | null>(null);
 
   useOnClickOutside({
-    ref: refDetailsPage,
+    element: refDetailView,
     callback: function handleClickOutside(e) {
-      if (detailsViewVisible) {
+      if (detailViewVisibility === "visible") {
         e.preventDefault();
         e.stopPropagation();
-        return setIsDetailViewVisible(false);
+        return setDetailViewVisibility("hidden");
       }
     },
   });
@@ -35,22 +34,19 @@ export function Album({ album }: Props) {
   useEffect(
     function disableBodyScoll() {
       // eslint-disable-next-line functional/immutable-data
-      document.body.style.overflow = detailsViewVisible ? "hidden" : "visible";
+      document.body.style.overflow = { visible: "hidden", hidden: "visible" }[
+        detailViewVisibility
+      ];
     },
-    [detailsViewVisible]
+    [detailViewVisibility]
   );
 
   function handleShowDetailsView(_e: MouseEvent<HTMLElement>) {
-    return !detailsViewVisible && setIsDetailViewVisible(true);
+    return setDetailViewVisibility("visible");
   }
 
   return (
-    <Container
-      tabIndex={0}
-      onClick={handleShowDetailsView}
-      onMouseEnter={loadAlbumDetailsComponent}
-      onFocus={loadAlbumDetailsComponent}
-    >
+    <Container tabIndex={0} onClick={handleShowDetailsView}>
       <Cover>
         <Image
           src={album.coverImage}
@@ -61,29 +57,29 @@ export function Album({ album }: Props) {
         />
       </Cover>
 
-      <DetailsPage isActive={detailsViewVisible} ref={refDetailsPage}>
-        {detailsViewVisible ? (
-          <Suspense fallback={<div>Loading...</div>}>
-            <AlbumDetails album={album} />
-          </Suspense>
-        ) : null}
+      <DetailsPage visibility={detailViewVisibility} ref={refDetailView}>
+        {
+          { visible: <AlbumDetails album={album} />, hidden: null }[
+            detailViewVisibility
+          ]
+        }
       </DetailsPage>
-      {detailsViewVisible ? <Overlay /> : null}
+      {{ visible: <Overlay />, hidden: null }[detailViewVisibility]}
     </Container>
   );
 }
 
 function useOnClickOutside({
-  ref,
+  element,
   callback,
 }: {
-  readonly ref: MutableRefObject<HTMLDivElement | null>;
+  readonly element: MutableRefObject<HTMLDivElement | null>;
   readonly callback: (_e: MouseEvent | TouchEvent) => unknown;
 }) {
   useEffect(
     function addEventListeners() {
       const listener = (event: any) => {
-        const clickedOutside = !ref?.current?.contains(event.target);
+        const clickedOutside = !element?.current?.contains(event.target);
         clickedOutside && callback(event);
       };
 
@@ -95,11 +91,11 @@ function useOnClickOutside({
         document.removeEventListener("touchstart", listener);
       };
     },
-    [ref, callback]
+    [element, callback]
   );
 }
 
-const DetailsPage = styled.div<{ readonly isActive: boolean }>`
+const DetailsPage = styled.div<{ readonly visibility: Visibility }>`
   position: fixed;
   top: 0;
   right: 0;
@@ -114,8 +110,8 @@ const DetailsPage = styled.div<{ readonly isActive: boolean }>`
   z-index: var(--zIndex-popup);
   visibility: hidden;
 
-  ${({ isActive }) =>
-    isActive &&
+  ${({ visibility }) =>
+    visibility === "visible" &&
     css`
       visibility: visible;
       left: calc(100% / 6);
@@ -140,7 +136,7 @@ const Container = styled.article`
   outline: 0;
 `;
 
-const Cover = styled.div<{ readonly invisible?: boolean }>`
+const Cover = styled.div`
   position: relative;
   transition: all 0.2s linear;
   z-index: var(--zIndex-cover);
@@ -158,15 +154,10 @@ const Cover = styled.div<{ readonly invisible?: boolean }>`
     box-shadow: rgba(0, 0, 0, 0.2) 7px -5px 15px;
     cursor: pointer;
   }
-
-  ${(props) =>
-    props.invisible &&
-    `
-  box-shadow: none;
-  cursor: none;
-`}
 `;
 
 interface Props {
   readonly album: FormattedAlbum;
 }
+
+type Visibility = "visible" | "hidden";
