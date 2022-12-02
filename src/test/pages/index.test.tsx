@@ -1,3 +1,4 @@
+/* eslint-disable functional/functional-parameters */
 /* eslint-disable functional/immutable-data */
 
 import * as db from "db/db.connect";
@@ -23,7 +24,7 @@ const user = userEvent.setup({
 console.log = jest.fn();
 console.time = jest.fn();
 
-const server = setupServer(getReleases(), getMasterData());
+const server = setupServer(getReleases, getMasterData);
 
 const handlerCalled = jest.fn();
 

@@ -20,12 +20,15 @@ export function Album({ album }: Props) {
   const [detailsViewVisible, setIsDetailViewVisible] = useState(false);
   const refDetailsPage = useRef<HTMLDivElement | null>(null);
 
-  useOnClickOutside(refDetailsPage, function handleClickOutside(e) {
-    if (detailsViewVisible) {
-      e.preventDefault();
-      e.stopPropagation();
-      setIsDetailViewVisible(false);
-    }
+  useOnClickOutside({
+    ref: refDetailsPage,
+    callback: function handleClickOutside(e) {
+      if (detailsViewVisible) {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsDetailViewVisible(false);
+      }
+    },
   });
 
   useEffect(
@@ -36,7 +39,7 @@ export function Album({ album }: Props) {
     [detailsViewVisible]
   );
 
-  function handleShowDetailsView() {
+  function handleShowDetailsView(_e: MouseEvent<HTMLElement>) {
     return !detailsViewVisible && setIsDetailViewVisible(true);
   }
 
@@ -69,15 +72,18 @@ export function Album({ album }: Props) {
   );
 }
 
-function useOnClickOutside(
-  ref: MutableRefObject<HTMLDivElement | null>,
-  handler: (_e: MouseEvent | TouchEvent) => void
-) {
+function useOnClickOutside({
+  ref,
+  callback,
+}: {
+  readonly ref: MutableRefObject<HTMLDivElement | null>;
+  readonly callback: (_e: MouseEvent | TouchEvent) => void;
+}) {
   useEffect(
     function addEventListeners() {
       const listener = (event: any) => {
         const clickedOutside = !ref?.current?.contains(event.target);
-        clickedOutside && handler(event);
+        clickedOutside && callback(event);
       };
 
       document.addEventListener("mousedown", listener);
@@ -88,7 +94,7 @@ function useOnClickOutside(
         document.removeEventListener("touchstart", listener);
       };
     },
-    [ref, handler]
+    [ref, callback]
   );
 }
 

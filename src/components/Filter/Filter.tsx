@@ -14,7 +14,7 @@ export function Filter({ onFilter }: Props) {
     }
   );
 
-  const debouncedQuery = useDebounced(filter.query, 500);
+  const debouncedQuery = useDebounced({ query: filter.query, timeout: 500 });
 
   useEffect(
     function callBackWhenChangedFilter() {
@@ -59,7 +59,13 @@ export function Filter({ onFilter }: Props) {
   );
 }
 
-const useDebounced = (query: string, timeout: number) => {
+const useDebounced = ({
+  query,
+  timeout,
+}: {
+  readonly query: string;
+  readonly timeout: number;
+}) => {
   const [value, setValue] = useState(query);
 
   useEffect(

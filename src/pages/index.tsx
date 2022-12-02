@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
-import { getAlbumsFromDatabase } from "api/albums";
+import {
+  FormattedAlbum,
+  getStoredAlbumsFromDb,
+  RawReleaseWithMasterData,
+} from "api/albums";
+import { connectToDatabase } from "db";
 import { InferGetStaticPropsType } from "next";
 import Head from "next/head";
 import styled from "styled-components";
@@ -7,6 +12,7 @@ import { breakpoint, breakpointSize, fontSize, space } from "theme";
 
 import { Album } from "components/Album";
 import { Filter, FilterOptions } from "components/Filter";
+import { catchChainedError } from "utils";
 
 export default function Home({
   albums,
@@ -79,17 +85,104 @@ export default function Home({
 }
 
 export async function getStaticProps() {
-  const albums = await getAlbumsFromDatabase().catch(() => undefined);
+  const connection = await connectToDatabase().catch(
+    catchChainedError("Could not connect to database")
+  );
 
-  return albums
-    ? {
-        props: {
-          albums,
-        },
-      }
-    : {
-        notFound: true,
+  if (connection instanceof Error) {
+    return {
+      notFound: true,
+    };
+  }
+
+  const unformattedAlbums = await getStoredAlbumsFromDb({
+    db: connection.db,
+  }).catch(catchChainedError("Could not get albums from database"));
+
+  if (unformattedAlbums instanceof Error) {
+    return {
+      notFound: true,
+    };
+  }
+
+  return {
+    props: {
+      albums: getFormattedAlbums(unformattedAlbums),
+    },
+  };
+}
+
+function getFormattedAlbums(
+  raw: readonly RawReleaseWithMasterData[]
+): readonly FormattedAlbum[] {
+  const formattedAllbums: readonly FormattedAlbum[] = raw.map(
+    function formatAlbum(release) {
+      const { basic_information, masterData } = release;
+
+      return {
+        id: release.id,
+        artist: basic_information.artists[0].name,
+        title: basic_information.title,
+        printedYear: basic_information.year,
+        releasedYear: masterData?.year ?? null,
+        thumbnail: basic_information.thumb,
+        coverImage: basic_information.cover_image,
+        format: basic_information.formats[0].name,
+        numberOfDiscs: basic_information.formats[0].qty,
+        label: basic_information.labels[0].name,
+        labelCategoryNumber: basic_information.labels[0].catno,
+        genres: basic_information.genres,
+        tracks:
+          masterData?.tracklist?.map(function mapTrack(track) {
+            return {
+              title: track.title,
+              position: track.position,
+              duration: track.duration,
+            };
+          }) ?? [],
+        videos:
+          masterData?.videos?.map(function mapVideoData(video) {
+            return {
+              url: video.uri,
+              title: video.title,
+            };
+          }) ?? [],
       };
+    }
+  );
+
+  return [
+    function sortByTitle(
+      ...[a, b]: readonly [a: FormattedAlbum, b: FormattedAlbum]
+    ) {
+      const [titleA, titleB] = [a.title, b.title].map(simplifyArtistName);
+      return titleB.localeCompare(titleA);
+    },
+    function sortByReleaseYear(
+      ...[a, b]: readonly [a: FormattedAlbum, b: FormattedAlbum]
+    ) {
+      return (a.releasedYear || 0) - (b.releasedYear || 0);
+    },
+    function sortByArtist(
+      ...[a, b]: readonly [a: FormattedAlbum, b: FormattedAlbum]
+    ) {
+      const [nameA, nameB] = [a.artist, b.artist].map(simplifyArtistName);
+
+      if (nameA < nameB) {
+        return -1;
+      }
+
+      if (nameA > nameB) {
+        return 1;
+      }
+
+      return 0;
+    },
+  ].reduce((list, compareFn) => [...list].sort(compareFn), formattedAllbums);
+}
+
+function simplifyArtistName(name: string) {
+  return name.toUpperCase().replace("THE", "").trim();
 }
 
 const Page = styled.div`

@@ -2,19 +2,23 @@ import { Db, MongoClient } from "mongodb";
 
 import { throwChainedError } from "utils";
 
-const { DB_NAME, DB_URI } = process.env;
+const { DB_NAME = "", DB_URI = "" } = process.env;
 
-if (![DB_NAME, DB_URI].every(Boolean)) {
-  throw new Error("Define mongodb environment variables");
-}
-
-export async function connectToDatabase(): Promise<{
+export async function connectToDatabase(
+  params: {
+    readonly url: string;
+    readonly dbName: string;
+  } = {
+    url: DB_URI,
+    dbName: DB_NAME,
+  }
+): Promise<{
   readonly db: Db;
   readonly client: MongoClient;
 }> {
-  const client = new MongoClient(DB_URI ?? "", {});
+  const client = new MongoClient(params.url, {});
   await client.connect().catch(throwChainedError("Client connection error"));
-  const db = client.db(DB_NAME);
+  const db = client.db(params.dbName);
 
   return {
     client,

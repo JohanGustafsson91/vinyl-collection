@@ -9,7 +9,8 @@
     "next",
     "prettier",
     "plugin:functional/no-mutations",
-    "plugin:functional/no-object-orientation"
+    "plugin:functional/no-object-orientation",
+    "plugin:functional/currying"
   ],
   "rules": {
     "simple-import-sort/imports": [
@@ -20,6 +21,25 @@
           ["^react", "^@?\\w"],
           ["^(components|config|contexts|shared|tracking|utils)", "^\\../"],
           ["^\\./"]
+        ]
+      }
+    ],
+    "functional/functional-parameters": [
+      "error",
+      {
+        "allowRestParameter": true,
+        "enforceParameterCount": "exactlyOne",
+        "ignorePrefixSelector": [
+          "CallExpression[callee.name=/use.*/]",
+          "CallExpression[callee.name='setTimeout']",
+          "ReturnStatement[argument.type='FunctionExpression']",
+          "VariableDeclarator[init.body.type='ImportExpression']",
+          "ExportDefaultDeclaration[declaration.id.name='Document']",
+          "ExportDefaultDeclaration[declaration.id.name='handler']",
+          "ExportNamedDeclaration[declaration.id.name='getStaticProps']",
+          "CallExpression[callee.property.name='map']",
+          "CallExpression[callee.property.name='reduce']",
+          "CallExpression[callee.property.name='filter']"
         ]
       }
     ]
