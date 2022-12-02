@@ -8,10 +8,11 @@ import {
   useRef,
   useState,
 } from "react";
-import { FormattedAlbum } from "api/albums";
 import Image from "next/image";
 import styled, { css } from "styled-components";
 import { breakpoint, space } from "theme";
+
+import { FormattedAlbum } from "shared/FormattedAlbum";
 
 const loadAlbumDetailsComponent = () => import("./Album.Details");
 const AlbumDetails = lazy(loadAlbumDetailsComponent);

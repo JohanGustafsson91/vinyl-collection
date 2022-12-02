@@ -1,8 +1,9 @@
 /* eslint-disable functional/immutable-data */
 /* eslint-disable functional/no-expression-statement */
 /* eslint-disable functional/functional-parameters */
-import { Raw, RawMasterData } from "api/albums/albums.Raw";
 import { rest } from "msw";
+
+import { Raw, RawMasterData } from "shared/Release";
 
 import mockDataReleases from "./releasesMockData.json";
 

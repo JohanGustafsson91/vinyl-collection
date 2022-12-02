@@ -11,7 +11,8 @@
     "plugin:functional/no-mutations",
     "plugin:functional/no-object-orientation",
     "plugin:functional/currying",
-    "plugin:functional/no-statements"
+    "plugin:functional/no-statements",
+    "plugin:functional/no-exceptions"
   ],
   "rules": {
     "simple-import-sort/imports": [
@@ -50,6 +51,12 @@
         "allowReturningBranches": true
       }
     ],
-    "functional/no-expression-statement": 0
+    "functional/no-expression-statement": 0, // ignoreVoid not working?
+    "functional/no-throw-statement": [
+      "error",
+      {
+        "allowInAsyncFunctions": true
+      }
+    ]
   }
 }

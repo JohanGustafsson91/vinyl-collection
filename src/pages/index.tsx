@@ -1,10 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import {
-  FormattedAlbum,
-  getStoredAlbumsFromDb,
-  RawReleaseWithMasterData,
-} from "api/albums";
-import { connectToDatabase } from "db";
+import { COLLECTION_ALBUMS, connectToDatabase } from "database";
 import { InferGetStaticPropsType } from "next";
 import Head from "next/head";
 import styled from "styled-components";
@@ -12,7 +7,9 @@ import { breakpoint, breakpointSize, fontSize, space } from "theme";
 
 import { Album } from "components/Album";
 import { Filter, FilterOptions } from "components/Filter";
-import { catchChainedError } from "utils";
+import type { FormattedAlbum } from "shared/FormattedAlbum";
+import { catchChainedError } from "shared/handleErrors";
+import type { RawReleaseWithMasterData } from "shared/Release";
 
 export default function Home({
   albums,
@@ -95,9 +92,11 @@ export async function getStaticProps() {
     };
   }
 
-  const unformattedAlbums = await getStoredAlbumsFromDb({
-    db: connection.db,
-  }).catch(catchChainedError("Could not get albums from database"));
+  const unformattedAlbums = await connection.db
+    .collection(COLLECTION_ALBUMS)
+    .find({})
+    .toArray()
+    .catch(catchChainedError("Could not get collections from database"));
 
   if (unformattedAlbums instanceof Error) {
     return {
@@ -107,7 +106,9 @@ export async function getStaticProps() {
 
   return {
     props: {
-      albums: getFormattedAlbums(unformattedAlbums),
+      albums: getFormattedAlbums(
+        unformattedAlbums as unknown as readonly RawReleaseWithMasterData[]
+      ),
     },
   };
 }

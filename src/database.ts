@@ -1,8 +1,10 @@
 import { Db, MongoClient } from "mongodb";
 
-import { throwChainedError } from "utils";
+import { throwChainedError } from "shared/handleErrors";
 
 const { DB_NAME = "", DB_URI = "" } = process.env;
+
+export const COLLECTION_ALBUMS = "albums";
 
 export async function connectToDatabase(
   params: {
