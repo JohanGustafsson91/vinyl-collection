@@ -106,14 +106,12 @@ export async function getStaticProps() {
 
   return {
     props: {
-      albums: getFormattedAlbums(unformattedAlbums),
+      albums: formatAlbums(unformattedAlbums),
     },
   };
 }
 
-function getFormattedAlbums(
-  raw: readonly RawReleaseWithMasterData[]
-): readonly FormattedAlbum[] {
+function formatAlbums(raw: readonly RawReleaseWithMasterData[]) {
   const formattedAllbums: readonly FormattedAlbum[] = raw.map(
     function formatAlbum(release) {
       const { basic_information, masterData } = release;

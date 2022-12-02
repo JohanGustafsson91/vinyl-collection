@@ -1,4 +1,4 @@
-import { Db, MongoClient } from "mongodb";
+import { MongoClient } from "mongodb";
 
 import { throwChainedError } from "shared/handleErrors";
 
@@ -14,10 +14,7 @@ export async function connectToDatabase(
     url: DB_URI,
     dbName: DB_NAME,
   }
-): Promise<{
-  readonly db: Db;
-  readonly client: MongoClient;
-}> {
+) {
   const client = new MongoClient(params.url, {});
   await client.connect().catch(throwChainedError("Client connection error"));
   const db = client.db(params.dbName);

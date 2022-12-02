@@ -70,9 +70,7 @@ async function syncAlbums(db: Db) {
   const albumsToInsertInDatabase = (
     await Promise.all(
       albumsToSaveInDatabaseWithoutMasterData.map(
-        async function fetchMasterDataForAlbum(
-          album: RawRelease
-        ): Promise<RawReleaseWithMasterData | undefined> {
+        async function fetchMasterDataForAlbum(album: RawRelease) {
           if (!album.basic_information.master_url) {
             return {
               ...album,
@@ -103,7 +101,7 @@ async function syncAlbums(db: Db) {
         }
       )
     )
-  ).filter(Boolean) as readonly RawReleaseWithMasterData[];
+  ).filter((item): item is RawReleaseWithMasterData => Boolean(item));
 
   const albumIdsToRemoveFromDatabase = storedAlbums.reduce((prev, album) => {
     const found = fetchedAlbums.find(({ id }) => id === album.id);
