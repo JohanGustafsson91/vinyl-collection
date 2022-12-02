@@ -49,7 +49,7 @@ export default async function handler(
 async function syncAlbums(db: Db) {
   const [storedAlbums, fetchedAlbums] = await Promise.all([
     await db
-      .collection(COLLECTION_ALBUMS)
+      .collection<RawReleaseWithMasterData>(COLLECTION_ALBUMS)
       .find({})
       .toArray()
       .catch(throwChainedError("Could not get collections from database")),
@@ -71,7 +71,7 @@ async function syncAlbums(db: Db) {
     await Promise.all(
       albumsToSaveInDatabaseWithoutMasterData.map(
         async function fetchMasterDataForAlbum(
-          album: Omit<RawRelease, "masterData">
+          album: RawRelease
         ): Promise<RawReleaseWithMasterData | undefined> {
           if (!album.basic_information.master_url) {
             return {

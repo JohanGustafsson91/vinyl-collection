@@ -93,7 +93,7 @@ export async function getStaticProps() {
   }
 
   const unformattedAlbums = await connection.db
-    .collection(COLLECTION_ALBUMS)
+    .collection<RawReleaseWithMasterData>(COLLECTION_ALBUMS)
     .find({})
     .toArray()
     .catch(catchChainedError("Could not get collections from database"));
@@ -106,9 +106,7 @@ export async function getStaticProps() {
 
   return {
     props: {
-      albums: getFormattedAlbums(
-        unformattedAlbums as unknown as readonly RawReleaseWithMasterData[]
-      ),
+      albums: getFormattedAlbums(unformattedAlbums),
     },
   };
 }
@@ -168,16 +166,7 @@ function getFormattedAlbums(
       ...[a, b]: readonly [a: FormattedAlbum, b: FormattedAlbum]
     ) {
       const [nameA, nameB] = [a.artist, b.artist].map(simplifyArtistName);
-
-      if (nameA < nameB) {
-        return -1;
-      }
-
-      if (nameA > nameB) {
-        return 1;
-      }
-
-      return 0;
+      return nameA < nameB ? -1 : nameA > nameB ? 1 : 0;
     },
   ].reduce((list, compareFn) => [...list].sort(compareFn), formattedAllbums);
 }
