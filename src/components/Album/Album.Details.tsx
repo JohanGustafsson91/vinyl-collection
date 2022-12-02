@@ -1,9 +1,14 @@
-import type { FormattedAlbum } from "api/albums";
 import Image from "next/image";
 import styled from "styled-components";
 import { breakpoint, fontSize, space } from "theme";
 
-export default function AlbumDetails({ album }: { album: FormattedAlbum }) {
+import type { FormattedAlbum } from "shared/FormattedAlbum";
+
+export default function AlbumDetails({
+  album,
+}: {
+  readonly album: FormattedAlbum;
+}) {
   return (
     <>
       <DetailsHeader>

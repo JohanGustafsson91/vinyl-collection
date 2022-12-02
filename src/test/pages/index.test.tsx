@@ -1,18 +1,24 @@
-import * as db from "db/db.connect";
-jest.mock("db/db.connect");
-const mockedDb = db as jest.Mocked<typeof db>;
+/* eslint-disable functional/no-conditional-statement */
+/* eslint-disable functional/immutable-data */
+/* eslint-disable functional/functional-parameters */
+/* eslint-disable functional/no-expression-statement */
+
+import * as database from "database";
+jest.mock("database");
+const mockedDatabase = database as jest.Mocked<typeof database>;
 
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { RawRelease } from "api/albums";
-import { getMasterData, getReleases } from "api/mocks/albums";
-import mockDataReleases from "api/mocks/albums/releasesMockData.json";
+import { getMasterData, getReleases } from "mocks/albums";
+import mockDataReleases from "mocks/albums/releasesMockData.json";
 import { Db, MongoClient } from "mongodb";
 import { rest } from "msw";
 import { setupServer } from "msw/node";
 import { NextApiRequest, NextApiResponse } from "next";
 import handler from "pages/api/revalidate";
 import Home, { getStaticProps } from "pages/index";
+
+import { RawRelease } from "shared/Release";
 
 const user = userEvent.setup({
   advanceTimers: () => jest.runOnlyPendingTimers(),
@@ -21,7 +27,7 @@ const user = userEvent.setup({
 console.log = jest.fn();
 console.time = jest.fn();
 
-const server = setupServer(getReleases(), getMasterData());
+const server = setupServer(getReleases, getMasterData);
 
 const handlerCalled = jest.fn();
 
@@ -41,7 +47,7 @@ afterAll(() => {
   server.close();
 });
 
-test("should fetch albums from database and render", async () => {
+test("should be able to view, filer and see details about albums", async () => {
   jest.useFakeTimers();
 
   const insertMany = jest.fn(() => Promise.resolve(true));
@@ -49,7 +55,7 @@ test("should fetch albums from database and render", async () => {
   const findCollections = jest.fn(() =>
     Promise.resolve([mockDataReleases.releases[0]])
   );
-  mockedDb.connectToDatabase.mockResolvedValue(
+  mockedDatabase.connectToDatabase.mockResolvedValue(
     Promise.resolve(
       mockDatabase({
         findCollections,
@@ -100,7 +106,7 @@ test("should not insert new releases in db if up to date", async () => {
   const findCollections = jest.fn(() =>
     Promise.resolve([mockDataReleases.releases[0]])
   );
-  mockedDb.connectToDatabase.mockResolvedValue(
+  mockedDatabase.connectToDatabase.mockResolvedValue(
     Promise.resolve(
       mockDatabase({
         findCollections,
@@ -122,7 +128,11 @@ test("should not insert new releases in db if up to date", async () => {
       }
     )
   );
-  const [revalidate, json, status] = [jest.fn(), jest.fn(), jest.fn()];
+  const [revalidate, json, status] = [
+    jest.fn().mockResolvedValue(true),
+    jest.fn(),
+    jest.fn(),
+  ];
 
   await handler(
     {
@@ -150,7 +160,7 @@ test("should insert new releases in db", async () => {
   const insertMany = jest.fn(() => Promise.resolve(true));
   const deleteMany = jest.fn(() => Promise.resolve(true));
   const findCollections = jest.fn(() => Promise.resolve([]));
-  mockedDb.connectToDatabase.mockResolvedValue(
+  mockedDatabase.connectToDatabase.mockResolvedValue(
     Promise.resolve(
       mockDatabase({
         findCollections,
@@ -172,7 +182,11 @@ test("should insert new releases in db", async () => {
       }
     )
   );
-  const [revalidate, json, status] = [jest.fn(), jest.fn(), jest.fn()];
+  const [revalidate, json, status] = [
+    jest.fn().mockResolvedValue(true),
+    jest.fn(),
+    jest.fn(),
+  ];
 
   await handler(
     {
@@ -203,7 +217,7 @@ test("should remove releases from db", async () => {
   const findCollections = jest.fn(() =>
     Promise.resolve([mockDataReleases.releases[0]])
   );
-  mockedDb.connectToDatabase.mockResolvedValue(
+  mockedDatabase.connectToDatabase.mockResolvedValue(
     Promise.resolve(
       mockDatabase({
         findCollections,
@@ -225,7 +239,11 @@ test("should remove releases from db", async () => {
       }
     )
   );
-  const [revalidate, json, status] = [jest.fn(), jest.fn(), jest.fn()];
+  const [revalidate, json, status] = [
+    jest.fn().mockResolvedValue(true),
+    jest.fn(),
+    jest.fn(),
+  ];
 
   await handler(
     {
@@ -252,7 +270,9 @@ test("should remove releases from db", async () => {
 
 describe("Error handling", () => {
   test("should show error message if db connection failed", async () => {
-    mockedDb.connectToDatabase.mockRejectedValue("Database connection error");
+    mockedDatabase.connectToDatabase.mockRejectedValue(
+      "Database connection error"
+    );
 
     const { notFound } = await getStaticProps();
 
@@ -263,7 +283,7 @@ describe("Error handling", () => {
     const insertMany = jest.fn(() => Promise.resolve(true));
     const deleteMany = jest.fn(() => Promise.resolve(true));
     const findCollections = jest.fn(() => Promise.reject("No connection"));
-    mockedDb.connectToDatabase.mockResolvedValue(
+    mockedDatabase.connectToDatabase.mockResolvedValue(
       Promise.resolve(
         mockDatabase({
           findCollections,
@@ -287,7 +307,7 @@ describe("Error handling", () => {
     const findCollections = jest.fn(() =>
       Promise.resolve([mockDataReleases.releases[0]])
     );
-    mockedDb.connectToDatabase.mockResolvedValue(
+    mockedDatabase.connectToDatabase.mockResolvedValue(
       Promise.resolve(
         mockDatabase({
           findCollections,
@@ -366,7 +386,7 @@ describe("Error handling", () => {
     const insertMany = jest.fn(() => Promise.resolve(true));
     const deleteMany = jest.fn(() => Promise.resolve(true));
     const findCollections = jest.fn(() => Promise.resolve([]));
-    mockedDb.connectToDatabase.mockResolvedValue(
+    mockedDatabase.connectToDatabase.mockResolvedValue(
       mockDatabase({
         findCollections,
         insertMany,
@@ -437,9 +457,9 @@ const mockDatabase = ({
   insertMany,
   deleteMany,
 }: {
-  findCollections: jest.Mock<Promise<RawRelease[]>>;
-  insertMany: jest.Mock<Promise<boolean>>;
-  deleteMany: jest.Mock<Promise<boolean>>;
+  readonly findCollections: jest.Mock<Promise<readonly RawRelease[]>>;
+  readonly insertMany: jest.Mock<Promise<boolean>>;
+  readonly deleteMany: jest.Mock<Promise<boolean>>;
 }) => ({
   client: {} as unknown as MongoClient,
   db: {

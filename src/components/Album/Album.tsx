@@ -8,10 +8,11 @@ import {
   useRef,
   useState,
 } from "react";
-import { FormattedAlbum } from "api/albums";
 import Image from "next/image";
 import styled, { css } from "styled-components";
 import { breakpoint, space } from "theme";
+
+import { FormattedAlbum } from "shared/FormattedAlbum";
 
 const loadAlbumDetailsComponent = () => import("./Album.Details");
 const AlbumDetails = lazy(loadAlbumDetailsComponent);
@@ -20,22 +21,26 @@ export function Album({ album }: Props) {
   const [detailsViewVisible, setIsDetailViewVisible] = useState(false);
   const refDetailsPage = useRef<HTMLDivElement | null>(null);
 
-  useOnClickOutside(refDetailsPage, function handleClickOutside(e) {
-    if (detailsViewVisible) {
-      e.preventDefault();
-      e.stopPropagation();
-      setIsDetailViewVisible(false);
-    }
+  useOnClickOutside({
+    ref: refDetailsPage,
+    callback: function handleClickOutside(e) {
+      if (detailsViewVisible) {
+        e.preventDefault();
+        e.stopPropagation();
+        return setIsDetailViewVisible(false);
+      }
+    },
   });
 
   useEffect(
     function disableBodyScoll() {
+      // eslint-disable-next-line functional/immutable-data
       document.body.style.overflow = detailsViewVisible ? "hidden" : "visible";
     },
     [detailsViewVisible]
   );
 
-  function handleShowDetailsView() {
+  function handleShowDetailsView(_e: MouseEvent<HTMLElement>) {
     return !detailsViewVisible && setIsDetailViewVisible(true);
   }
 
@@ -68,15 +73,18 @@ export function Album({ album }: Props) {
   );
 }
 
-function useOnClickOutside(
-  ref: MutableRefObject<HTMLDivElement | null>,
-  handler: (_e: MouseEvent | TouchEvent) => void
-) {
+function useOnClickOutside({
+  ref,
+  callback,
+}: {
+  readonly ref: MutableRefObject<HTMLDivElement | null>;
+  readonly callback: (_e: MouseEvent | TouchEvent) => unknown;
+}) {
   useEffect(
     function addEventListeners() {
       const listener = (event: any) => {
         const clickedOutside = !ref?.current?.contains(event.target);
-        clickedOutside && handler(event);
+        clickedOutside && callback(event);
       };
 
       document.addEventListener("mousedown", listener);
@@ -87,11 +95,11 @@ function useOnClickOutside(
         document.removeEventListener("touchstart", listener);
       };
     },
-    [ref, handler]
+    [ref, callback]
   );
 }
 
-const DetailsPage = styled.div<{ isActive: boolean }>`
+const DetailsPage = styled.div<{ readonly isActive: boolean }>`
   position: fixed;
   top: 0;
   right: 0;
@@ -132,7 +140,7 @@ const Container = styled.article`
   outline: 0;
 `;
 
-const Cover = styled.div<{ invisible?: boolean }>`
+const Cover = styled.div<{ readonly invisible?: boolean }>`
   position: relative;
   transition: all 0.2s linear;
   z-index: var(--zIndex-cover);
@@ -160,5 +168,5 @@ const Cover = styled.div<{ invisible?: boolean }>`
 `;
 
 interface Props {
-  album: FormattedAlbum;
+  readonly album: FormattedAlbum;
 }
