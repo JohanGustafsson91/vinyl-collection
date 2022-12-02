@@ -26,7 +26,7 @@ export function Album({ album }: Props) {
       if (detailsViewVisible) {
         e.preventDefault();
         e.stopPropagation();
-        setIsDetailViewVisible(false);
+        return setIsDetailViewVisible(false);
       }
     },
   });
@@ -77,7 +77,7 @@ function useOnClickOutside({
   callback,
 }: {
   readonly ref: MutableRefObject<HTMLDivElement | null>;
-  readonly callback: (_e: MouseEvent | TouchEvent) => void;
+  readonly callback: (_e: MouseEvent | TouchEvent) => unknown;
 }) {
   useEffect(
     function addEventListeners() {

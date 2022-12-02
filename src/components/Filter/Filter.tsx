@@ -107,6 +107,7 @@ const Checkbox = styled.input`
 `;
 
 interface Props {
+  // eslint-disable-next-line functional/no-return-void
   readonly onFilter: (arg: FilterOptions) => void;
 }
 

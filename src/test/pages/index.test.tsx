@@ -1,5 +1,7 @@
-/* eslint-disable functional/functional-parameters */
+/* eslint-disable functional/no-conditional-statement */
 /* eslint-disable functional/immutable-data */
+/* eslint-disable functional/functional-parameters */
+/* eslint-disable functional/no-expression-statement */
 
 import * as db from "db/db.connect";
 jest.mock("db/db.connect");

@@ -71,7 +71,6 @@ export default async function handler(
       )
     ).filter(Boolean) as readonly RawReleaseWithMasterData[];
 
-    // eslint-disable-next-line functional/functional-parameters
     const albumIdsToRemoveFromDatabase = storedAlbums.reduce((prev, album) => {
       const found = fetchedAlbums.find(({ id }) => id === album.id);
       return [...prev, ...(found ? [] : [album.id])];

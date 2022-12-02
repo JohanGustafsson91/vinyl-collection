@@ -50,7 +50,7 @@ export default function Home({
         return [matchArtist, matchTitle, matchTrack].some(Boolean);
       });
 
-      setFilteredAlbums(albumsFiltered);
+      return setFilteredAlbums(albumsFiltered);
     },
     [albums]
   );

@@ -10,7 +10,8 @@
     "prettier",
     "plugin:functional/no-mutations",
     "plugin:functional/no-object-orientation",
-    "plugin:functional/currying"
+    "plugin:functional/currying",
+    "plugin:functional/no-statements"
   ],
   "rules": {
     "simple-import-sort/imports": [
@@ -42,6 +43,13 @@
           "CallExpression[callee.property.name='filter']"
         ]
       }
-    ]
+    ],
+    "functional/no-conditional-statement": [
+      "error",
+      {
+        "allowReturningBranches": true
+      }
+    ],
+    "functional/no-expression-statement": 0
   }
 }
