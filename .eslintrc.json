@@ -5,7 +5,12 @@
   "env": { "es6": true },
   "root": true,
   "plugins": ["simple-import-sort", "import", "functional"],
-  "extends": ["next", "prettier", "plugin:functional/no-mutations"],
+  "extends": [
+    "next",
+    "prettier",
+    "plugin:functional/no-mutations",
+    "plugin:functional/no-object-orientation"
+  ],
   "rules": {
     "simple-import-sort/imports": [
       "error",
