@@ -14,7 +14,7 @@ import { FormattedAlbum } from "shared/FormattedAlbum";
 
 import { AlbumDetails } from "./Album.Details";
 
-export function Album({ album }: Props) {
+export function Album({ album, index }: Props) {
   const [detailViewVisibility, setDetailViewVisibility] =
     useState<Visibility>("hidden");
 
@@ -54,6 +54,7 @@ export function Album({ album }: Props) {
           style={{ width: "100%", height: "100%" }}
           width={200}
           height={200}
+          priority={index < ABOOVE_THE_FOLD}
         />
       </Cover>
 
@@ -68,6 +69,8 @@ export function Album({ album }: Props) {
     </Container>
   );
 }
+
+const ABOOVE_THE_FOLD = 8;
 
 function useOnClickOutside({
   element,
@@ -158,6 +161,7 @@ const Cover = styled.div`
 
 interface Props {
   readonly album: FormattedAlbum;
+  readonly index: number;
 }
 
 type Visibility = "visible" | "hidden";

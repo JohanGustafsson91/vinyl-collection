@@ -64,7 +64,7 @@ export default function Home({
         <Container>
           {filteredAlbums.map((album, i) => (
             <div key={album.id} style={{ placeSelf: "center" }}>
-              <Album album={album} />
+              <Album album={album} index={i} />
               {i % 2 === 0 ? <Shelf /> : null}
             </div>
           ))}
