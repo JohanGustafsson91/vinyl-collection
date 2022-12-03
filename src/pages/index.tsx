@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { COLLECTION_ALBUMS, connectToDatabase } from "database";
 import { InferGetStaticPropsType } from "next";
 import Head from "next/head";
@@ -9,19 +9,13 @@ import { Album } from "components/Album";
 import { Filter, FilterOptions } from "components/Filter";
 import type { FormattedAlbum } from "shared/FormattedAlbum";
 import { catchChainedError } from "shared/handleErrors";
+import { logger } from "shared/logger";
 import type { RawReleaseWithMasterData } from "shared/Release";
 
 export default function Home({
   albums,
 }: InferGetStaticPropsType<typeof getStaticProps>) {
   const [filteredAlbums, setFilteredAlbums] = useState(albums);
-
-  useEffect(
-    function updateFilteredAlbums() {
-      albums.length && setFilteredAlbums(albums);
-    },
-    [albums]
-  );
 
   const memoizedHandleFilterAlbums = useCallback(
     function handleFilterAlbum({ query, includeTrack }: FilterOptions) {
@@ -71,7 +65,7 @@ export default function Home({
         <Container>
           {filteredAlbums.map((album, i) => (
             <div key={album.id} style={{ placeSelf: "center" }}>
-              <Album album={album} />
+              <Album album={album} index={i} />
               {i % 2 === 0 ? <Shelf /> : null}
             </div>
           ))}
@@ -82,26 +76,24 @@ export default function Home({
 }
 
 export async function getStaticProps() {
-  const connection = await connectToDatabase().catch(
+  const databaseConnection = await connectToDatabase().catch(
     catchChainedError("Could not connect to database")
   );
 
-  if (connection instanceof Error) {
-    return {
-      notFound: true,
-    };
+  if (databaseConnection instanceof Error) {
+    logger.error(databaseConnection);
+    throw databaseConnection;
   }
 
-  const unformattedAlbums = await connection.db
+  const unformattedAlbums = await databaseConnection.db
     .collection<RawReleaseWithMasterData>(COLLECTION_ALBUMS)
     .find({})
     .toArray()
     .catch(catchChainedError("Could not get collections from database"));
 
   if (unformattedAlbums instanceof Error) {
-    return {
-      notFound: true,
-    };
+    logger.error(unformattedAlbums);
+    throw unformattedAlbums;
   }
 
   return {
