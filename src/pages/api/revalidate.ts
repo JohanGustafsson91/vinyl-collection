@@ -28,7 +28,7 @@ export default async function handler(
     return res.status(500).send("Error revalidating");
   }
 
-  const syncedAlbums = await syncAlbums(connection.db).catch(
+  const syncedAlbums = await syncAlbumsToDatabase(connection.db).catch(
     catchChainedError("Could not sync albums")
   );
 
@@ -41,12 +41,15 @@ export default async function handler(
     .revalidate("/")
     .catch(catchChainedError("Could not revalidate"));
 
-  return revalidateResult instanceof Error
-    ? res.status(500).send("Error revalidating")
-    : res.json({ revalidated: true });
+  if (revalidateResult instanceof Error) {
+    logger.error(revalidateResult);
+    return res.status(500).send("Error revalidating");
+  }
+
+  return res.json({ revalidated: true });
 }
 
-async function syncAlbums(db: Db) {
+async function syncAlbumsToDatabase(db: Db) {
   const [storedAlbums, fetchedAlbums] = await Promise.all([
     await db
       .collection<RawReleaseWithMasterData>(COLLECTION_ALBUMS)
@@ -63,64 +66,66 @@ async function syncAlbums(db: Db) {
       .catch(throwChainedError("Could not fetch releases from discogs")),
   ]).catch(throwChainedError("Could not get albums from database or api"));
 
-  const albumsToSaveInDatabaseWithoutMasterData = fetchedAlbums.filter(
+  const partialAlbumsToSaveInDatabase = fetchedAlbums.filter(
     (album) => !storedAlbums.find(({ id }) => id === album.id)
   );
 
-  const albumsToInsertInDatabase = (
+  const albumsToSaveInDatabase = (
     await Promise.all(
-      albumsToSaveInDatabaseWithoutMasterData.map(
-        async function fetchMasterDataForAlbum(album: RawRelease) {
-          if (!album.basic_information.master_url) {
-            return {
-              ...album,
-              masterData: undefined,
-            };
-          }
-
-          const response = await request<RawMasterData>({
-            url: album.basic_information.master_url,
-            init: {
-              headers: getHeaders(),
-            },
-          }).catch(
-            catchChainedError(
-              `Could not fetch master data for album ${album.id}`
-            )
-          );
-
-          if (response instanceof Error) {
-            logger.info(response.message);
-            return undefined;
-          }
-
+      partialAlbumsToSaveInDatabase.map(async function fetchMasterDataForAlbum(
+        album: RawRelease
+      ) {
+        if (!album.basic_information.master_url) {
           return {
             ...album,
-            masterData: response,
+            masterData: undefined,
           };
         }
-      )
+
+        const response = await request<RawMasterData>({
+          url: album.basic_information.master_url,
+          init: {
+            headers: getHeaders(),
+          },
+        }).catch(
+          catchChainedError(`Could not fetch master data for album ${album.id}`)
+        );
+
+        if (response instanceof Error) {
+          logger.info(response.message);
+          return undefined;
+        }
+
+        return {
+          ...album,
+          masterData: response,
+        };
+      })
     )
   ).filter((item): item is RawReleaseWithMasterData => Boolean(item));
 
-  const albumIdsToRemoveFromDatabase = storedAlbums.reduce((prev, album) => {
-    const found = fetchedAlbums.find(({ id }) => id === album.id);
-    return [...prev, ...(found ? [] : [album.id])];
-  }, [] as readonly number[]);
+  const listOfAlbumIdsToDeleteFromDatabase = storedAlbums.reduce(
+    (prev, album) => {
+      const found = fetchedAlbums.find(({ id }) => id === album.id);
+      return [...prev, ...(found ? [] : [album.id])];
+    },
+    [] as readonly number[]
+  );
 
-  logger.info("albumsToInsertInDatabase", albumsToInsertInDatabase);
-  logger.info("albumIdsToRemoveFromDatabase", albumIdsToRemoveFromDatabase);
+  logger.info("albumsToInsertInDatabase", albumsToSaveInDatabase);
+  logger.info(
+    "albumIdsToRemoveFromDatabase",
+    listOfAlbumIdsToDeleteFromDatabase
+  );
 
   await Promise.all([
     // Insert albums in db
-    albumsToInsertInDatabase.length &&
-      db
-        .collection(COLLECTION_ALBUMS)
-        .insertMany([...albumsToInsertInDatabase]),
+    albumsToSaveInDatabase.length &&
+      db.collection(COLLECTION_ALBUMS).insertMany([...albumsToSaveInDatabase]),
     // Remove albums from db
-    albumIdsToRemoveFromDatabase.length &&
+    listOfAlbumIdsToDeleteFromDatabase.length &&
       db.collection(COLLECTION_ALBUMS).deleteMany({
-        id: { $in: albumIdsToRemoveFromDatabase },
+        id: { $in: listOfAlbumIdsToDeleteFromDatabase },
       }),
   ]).catch(throwChainedError("Could not update database"));
 
