@@ -16,13 +16,6 @@ export default function Home({
 }: InferGetStaticPropsType<typeof getStaticProps>) {
   const [filteredAlbums, setFilteredAlbums] = useState(albums);
 
-  useEffect(
-    function updateFilteredAlbums() {
-      albums.length && setFilteredAlbums(albums);
-    },
-    [albums]
-  );
-
   const memoizedHandleFilterAlbums = useCallback(
     function handleFilterAlbum({ query, includeTrack }: FilterOptions) {
       if (query === "") {
@@ -82,17 +75,17 @@ export default function Home({
 }
 
 export async function getStaticProps() {
-  const connection = await connectToDatabase().catch(
+  const databaseConnection = await connectToDatabase().catch(
     catchChainedError("Could not connect to database")
   );
 
-  if (connection instanceof Error) {
+  if (databaseConnection instanceof Error) {
     return {
       notFound: true,
     };
   }
 
-  const unformattedAlbums = await connection.db
+  const unformattedAlbums = await databaseConnection.db
     .collection<RawReleaseWithMasterData>(COLLECTION_ALBUMS)
     .find({})
     .toArray()
