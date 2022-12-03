@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { COLLECTION_ALBUMS, connectToDatabase } from "database";
 import { InferGetStaticPropsType } from "next";
 import Head from "next/head";
@@ -9,6 +9,7 @@ import { Album } from "components/Album";
 import { Filter, FilterOptions } from "components/Filter";
 import type { FormattedAlbum } from "shared/FormattedAlbum";
 import { catchChainedError } from "shared/handleErrors";
+import { logger } from "shared/logger";
 import type { RawReleaseWithMasterData } from "shared/Release";
 
 export default function Home({
@@ -80,9 +81,8 @@ export async function getStaticProps() {
   );
 
   if (databaseConnection instanceof Error) {
-    return {
-      notFound: true,
-    };
+    logger.error(databaseConnection);
+    throw databaseConnection;
   }
 
   const unformattedAlbums = await databaseConnection.db
@@ -92,9 +92,8 @@ export async function getStaticProps() {
     .catch(catchChainedError("Could not get collections from database"));
 
   if (unformattedAlbums instanceof Error) {
-    return {
-      notFound: true,
-    };
+    logger.error(unformattedAlbums);
+    throw unformattedAlbums;
   }
 
   return {

@@ -274,15 +274,15 @@ describe("Error handling", () => {
       "Database connection error"
     );
 
-    const { notFound } = await getStaticProps();
-
-    expect(notFound).toBeTruthy();
+    await expect(getStaticProps()).rejects.toThrow("Database connection error");
   });
 
   test("should show error message if db fails to update", async () => {
     const insertMany = jest.fn(() => Promise.resolve(true));
     const deleteMany = jest.fn(() => Promise.resolve(true));
-    const findCollections = jest.fn(() => Promise.reject("No connection"));
+    const findCollections = jest.fn(() =>
+      Promise.reject("Error find collection")
+    );
     mockedDatabase.connectToDatabase.mockResolvedValue(
       Promise.resolve(
         mockDatabase({
@@ -293,9 +293,8 @@ describe("Error handling", () => {
       )
     );
 
-    const { notFound } = await getStaticProps();
+    await expect(getStaticProps()).rejects.toThrow("Error find collection");
 
-    expect(notFound).toBeTruthy();
     expect(insertMany).toHaveBeenCalledTimes(0);
     expect(deleteMany).toHaveBeenCalledTimes(0);
     expect(handlerCalled.mock.calls.flat()).toMatchInlineSnapshot(`[]`);
