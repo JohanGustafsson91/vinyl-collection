@@ -8,7 +8,7 @@ import {
 } from "react";
 import Image from "next/image";
 import styled, { css } from "styled-components";
-import { breakpoint, space } from "theme";
+import { breakpoint, breakpointSize, space } from "theme";
 
 import { FormattedAlbum } from "shared/FormattedAlbum";
 
@@ -52,9 +52,12 @@ export function Album({ album, index }: Props) {
           src={album.coverImage}
           alt={`${album.artist} - ${album.title} (${album.releasedYear}) cover image`}
           style={{ width: "100%", height: "100%" }}
-          width={200}
-          height={200}
+          width={imageSize.desktop}
+          height={imageSize.desktop}
           priority={index < ABOOVE_THE_FOLD}
+          sizes={`(max-width: ${breakpointSize(0)}) ${imageSize.mobile}px, ${
+            imageSize.desktop
+          }px`}
         />
       </Cover>
 
@@ -139,17 +142,22 @@ const Container = styled.article`
   outline: 0;
 `;
 
+const imageSize = {
+  mobile: 120,
+  desktop: 200,
+};
+
 const Cover = styled.div`
   position: relative;
   transition: all 0.2s linear;
   z-index: var(--zIndex-cover);
-  width: 120px;
-  height: 120px;
+  width: ${imageSize.mobile}px;
+  height: ${imageSize.mobile}px;
   box-shadow: rgba(0, 0, 0, 0.16) 0px 1px 4px;
 
   ${breakpoint(0)} {
-    width: 200px;
-    height: 200px;
+    width: ${imageSize.desktop}px;
+    height: ${imageSize.desktop}px;
   }
 
   &:hover {
