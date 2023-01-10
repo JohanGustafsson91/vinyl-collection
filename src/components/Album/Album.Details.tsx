@@ -86,7 +86,6 @@ export function AlbumDetails({ album }: { readonly album: FormattedAlbum }) {
                       </a>
                     </DetailsTrack>
                   ))}
-                  )
                 </DetailsTrackList>
               ),
               listWithNoItems: (
