@@ -2,7 +2,6 @@ const nextJest = require("next/jest");
 
 const createJestConfig = nextJest({ dir: "./" });
 
-// eslint-disable-next-line functional/immutable-data
 module.exports = createJestConfig({
   roots: ["<rootDir>"],
   modulePaths: ["src"],

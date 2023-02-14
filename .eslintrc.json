@@ -4,8 +4,8 @@
   },
   "env": { "es6": true },
   "root": true,
-  "plugins": ["simple-import-sort", "import", "functional"],
-  "extends": ["next", "prettier", "plugin:functional/recommended"],
+  "plugins": ["simple-import-sort", "import"],
+  "extends": ["next", "prettier"],
   "rules": {
     "simple-import-sort/imports": [
       "error",
@@ -16,38 +16,6 @@
           ["^(components|config|contexts|shared|tracking|utils)", "^\\../"],
           ["^\\./"]
         ]
-      }
-    ],
-    "functional/functional-parameters": [
-      "error",
-      {
-        "allowRestParameter": true,
-        "enforceParameterCount": "exactlyOne",
-        "ignorePrefixSelector": [
-          "CallExpression[callee.name=/use.*/]",
-          "CallExpression[callee.name='setTimeout']",
-          "ReturnStatement[argument.type='FunctionExpression']",
-          "VariableDeclarator[init.body.type='ImportExpression']",
-          "ExportDefaultDeclaration[declaration.id.name='Document']",
-          "ExportDefaultDeclaration[declaration.id.name='handler']",
-          "ExportNamedDeclaration[declaration.id.name='getStaticProps']",
-          "CallExpression[callee.property.name='map']",
-          "CallExpression[callee.property.name='reduce']",
-          "CallExpression[callee.property.name='filter']"
-        ]
-      }
-    ],
-    "functional/no-conditional-statement": [
-      "error",
-      {
-        "allowReturningBranches": true
-      }
-    ],
-    "functional/no-expression-statement": 0, // ignoreVoid not working?
-    "functional/no-throw-statement": [
-      "error",
-      {
-        "allowInAsyncFunctions": true
       }
     ]
   }
