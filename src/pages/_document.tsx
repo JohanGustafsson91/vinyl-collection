@@ -8,7 +8,6 @@ import NextDocument, {
 } from "next/document";
 import { ServerStyleSheet } from "styled-components";
 
-// eslint-disable-next-line functional/no-class
 class Document extends NextDocument {
   static async getInitialProps(
     ctx: DocumentContext
@@ -16,9 +15,7 @@ class Document extends NextDocument {
     const sheet = new ServerStyleSheet();
     const originalRenderPage = ctx.renderPage;
 
-    // eslint-disable-next-line functional/no-try-statement
     try {
-      // eslint-disable-next-line functional/immutable-data, functional/functional-parameters
       ctx.renderPage = function renderPage() {
         return originalRenderPage({
           enhanceApp: (App) => (props) =>
@@ -42,7 +39,6 @@ class Document extends NextDocument {
     }
   }
 
-  // eslint-disable-next-line functional/functional-parameters
   render(): React.ReactElement {
     return (
       <Html lang="en">

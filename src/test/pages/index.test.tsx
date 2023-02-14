@@ -1,8 +1,3 @@
-/* eslint-disable functional/no-conditional-statement */
-/* eslint-disable functional/immutable-data */
-/* eslint-disable functional/functional-parameters */
-/* eslint-disable functional/no-expression-statement */
-
 import * as database from "database";
 jest.mock("database");
 const mockedDatabase = database as jest.Mocked<typeof database>;

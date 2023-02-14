@@ -33,7 +33,6 @@ export function Album({ album, index }: Props) {
 
   useEffect(
     function disableBodyScoll() {
-      // eslint-disable-next-line functional/immutable-data
       document.body.style.overflow = { visible: "hidden", hidden: "visible" }[
         detailViewVisibility
       ];
